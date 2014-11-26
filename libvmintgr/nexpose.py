@@ -2,6 +2,12 @@ import sys
 import xml.etree.ElementTree as ET
 import StringIO
 import csv
+import time
+import datetime
+import pytz
+import urllib
+import urllib2
+import cookielib
 
 sys.path.append('../../pnexpose')
 
@@ -9,10 +15,69 @@ import pnexpose
 import debug
 import vuln
 
+nx_console_server = None
+nx_console_port = None
+
 class nexpose_connector(object):
     def __init__(self, server, port, user, pw):
         self.conn = pnexpose.nexposeClient(server, port, user, pw)
         self.sitelist = {}
+
+def nexpose_consolelogin(server, port, user, pw):
+    global nx_console_server
+    global nx_console_port
+
+    loginurl = 'https://%s:%d/login.html' % (server, port)
+    vals = { 'nexposeccusername': user,
+             'nexposeccpassword': pw,
+             'loginRedir': '/home.jsp',
+             'screenresolution': '1280x800' }
+
+    nx_console_server = server
+    nx_console_port = port
+
+    cj = cookielib.LWPCookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    urllib2.install_opener(opener)
+    formdata = urllib.urlencode(vals)
+    req = urllib2.Request(loginurl, formdata)
+    resp = urllib2.urlopen(req)
+
+    # XXX Handle a failed login here
+
+def generate_report(scanner, repid):
+    debug.printd('requesting generation of report %s' % repid)
+    replist = scanner.conn.report_generate(repid)
+    debug.printd('polling for completion, standby')
+    replist = None
+    while True:
+        replist = report_list(scanner)
+        if replist[repid]['status'] == 'Generated':
+            debug.printd('report generation complete')
+            break
+        time.sleep(15)
+    nexpose_fetch_report(repid, replist[repid]['url'])
+
+def nexpose_fetch_report(repid, reploc):
+    url = 'https://%s:%d/%s' % (nx_console_server, nx_console_port, reploc)
+
+    req = urllib2.Request(url, None)
+    resp = urllib2.urlopen(req)
+    print resp.read()
+
+def cred_test(scanner):
+    squery = '''
+    SELECT date, credential_status FROM fact_asset_scan_service
+    '''
+
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    #print scanner.conn.report_listing()
+    #print scanner.conn.adhoc_report(squery, sites)
+    #print scanner.conn.report_listing()
+    #print scanner.conn.report_generate(79)
 
 def vuln_extraction(scanner):
     squery = '''
@@ -65,7 +130,13 @@ def vuln_extraction(scanner):
         v.hostname = i[3]
         v.macaddr = i[4]
         v.title = i[5]
-        v.discovered_date = i[7]
+        idx = i[7].find('.')
+        if idx > 0:
+            dstr = i[7][:idx]
+        else:
+            dstr = i[7]
+        dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+        dt = dt.replace(tzinfo=pytz.UTC)
         v.cvss = float(i[11])
 
         linked += vuln_instance_link(v, scanner)
@@ -94,6 +165,24 @@ def site_extraction(scanner):
         siteinfo['assets'] = []
         scanner.sitelist[siteinfo['id']] = siteinfo
     debug.printd('read %d sites' % len(scanner.sitelist))
+
+def report_list(scanner):
+    debug.printd('requesting report list')
+    replist = scanner.conn.report_listing()
+
+    ret = {}
+    root = ET.fromstring(replist)
+    for s in root:
+        if s.tag != 'ReportConfigSummary':
+            continue
+        newrep = {}
+        newrep['name'] = s.attrib['name']
+        newrep['id'] = s.attrib['cfg-id']
+        newrep['last-generated'] = s.attrib['generated-on']
+        newrep['status'] = s.attrib['status']
+        newrep['url'] = s.attrib['report-URI']
+        ret[newrep['id']] = newrep
+    return ret
 
 def asset_extraction(scanner):
     for sid in scanner.sitelist.keys():

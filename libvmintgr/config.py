@@ -11,6 +11,8 @@ class VMConfig(object):
         self.vms_server = None
         self.vms_port = 0
 
+        self.devauth_report = None
+
         if fn == None:
 	    fn = self._def_conf_path
 
@@ -23,14 +25,23 @@ class VMConfig(object):
         for s in self._cp.sections():
             if s == 'vms':
                 mdesc = 'vms'
+            elif s == 'device_authfail':
+                mdesc = 'device_authfail'
             else:
                 sys.stderr.write('invalid configuration section %s\n' % \
                     s)
                 sys.exit(1)
+            parsefunc = getattr(self, 'parse_' + s)
+            for k, v in self._cp.items(s):
+                parsefunc(k, v, s)
 
-        parsefunc = getattr(self, 'parse_' + s)
-        for k, v in self._cp.items(s):
-            parsefunc(k, v, s)
+    def parse_device_authfail(self, k, v, s):
+        if k == 'repid':
+            self.devauth_report = v
+        else:
+            sys.stderr.write('option %s not available under %s\n' % \
+                (k, s))
+            sys.exit(1)
 
     def parse_vms(self, k, v, s):
         if k == 'username':
