@@ -20,8 +20,7 @@ def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
-    print scanner.conn.site_scan_history(1)
-    print scanner.conn.scan_statistics(1)
+    libvmintgr.vuln_extraction(scanner)
 
 def domain():
     global vmconfig
