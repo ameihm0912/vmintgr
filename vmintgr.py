@@ -14,18 +14,18 @@ debug = False
 scanner = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-h] [-f path]\n')
+    sys.stdout.write('usage: vmintgr.py [-Radh] [-f path]\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
     libvmintgr.site_extraction(scanner)
-    #libvmintgr.asset_extraction(scanner)
-    #libvmintgr.vuln_extraction(scanner)
-    libvmintgr.cred_test(scanner)
+    libvmintgr.asset_extraction(scanner)
 
 def wf_device_auth_fail():
     libvmintgr.printd('executing device authentication failure workflow...')
-    libvmintgr.generate_report(scanner, vmconfig.devauth_report)
+    ret = libvmintgr.generate_report(scanner, vmconfig.devauth_report)
+    faildata = libvmintgr.nexpose_parse_custom_authfail(ret)
+    # format / handle failure data
 
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)

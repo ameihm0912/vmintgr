@@ -15,6 +15,7 @@ import pnexpose
 import debug
 import vuln
 
+cookiejar = None
 nx_console_server = None
 nx_console_port = None
 
@@ -26,6 +27,7 @@ class nexpose_connector(object):
 def nexpose_consolelogin(server, port, user, pw):
     global nx_console_server
     global nx_console_port
+    global cookiejar
 
     loginurl = 'https://%s:%d/login.html' % (server, port)
     vals = { 'nexposeccusername': user,
@@ -36,8 +38,8 @@ def nexpose_consolelogin(server, port, user, pw):
     nx_console_server = server
     nx_console_port = port
 
-    cj = cookielib.LWPCookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    cookiejar = cookielib.LWPCookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
     urllib2.install_opener(opener)
     formdata = urllib.urlencode(vals)
     req = urllib2.Request(loginurl, formdata)
@@ -55,29 +57,51 @@ def generate_report(scanner, repid):
         if replist[repid]['status'] == 'Generated':
             debug.printd('report generation complete')
             break
-        time.sleep(15)
-    nexpose_fetch_report(repid, replist[repid]['url'])
+        time.sleep(5)
+    ret = nexpose_fetch_report(repid, replist[repid]['url'])
+    return ret
+
+def nexpose_parse_custom_authfail(buf):
+    # This function operates on the following custom query associated with the
+    # auth failure report:
+    #
+    # SELECT da.ip_address, da.host_name, os.name, critical_vulnerabilities,
+    # severe_vulnerabilities, exploits, riskscore,
+    # aggregated_credential_status_description   
+    # FROM fact_asset    
+    # JOIN dim_aggregated_credential_status USING(aggregated_credential_status_id)
+    # JOIN dim_asset da USING(asset_id)
+    # JOIN dim_operating_system os USING(operating_system_id)
+    reader = csv.reader(StringIO.StringIO(buf))
+    ret = []
+    for i in reader:
+        if i[0] == 'ip_address':
+            continue
+        newent = {}
+        newent['ip'] = i[0]
+        newent['hostname'] = i[1]
+        newent['os'] = i[2]
+        newent['ncrit'] = i[3]
+        newent['nsevere'] = i[4]
+        newent['exploits'] = i[5]
+        newent['riskscore'] = i[6]
+        if i[7] == 'All credentials failed':
+            newent['credstatus'] = False
+        else:
+            newent['credstatus'] = True
+        ret.append(newent)
+    return ret
 
 def nexpose_fetch_report(repid, reploc):
+    global cookiejar
+
     url = 'https://%s:%d/%s' % (nx_console_server, nx_console_port, reploc)
 
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+    urllib2.install_opener(opener)
     req = urllib2.Request(url, None)
     resp = urllib2.urlopen(req)
-    print resp.read()
-
-def cred_test(scanner):
-    squery = '''
-    SELECT date, credential_status FROM fact_asset_scan_service
-    '''
-
-    sites = scanner.sitelist.keys()
-    if len(sites) == 0:
-        return
-
-    #print scanner.conn.report_listing()
-    #print scanner.conn.adhoc_report(squery, sites)
-    #print scanner.conn.report_listing()
-    #print scanner.conn.report_generate(79)
+    return resp.read()
 
 def vuln_extraction(scanner):
     squery = '''
