@@ -25,7 +25,9 @@ def wf_device_auth_fail():
     libvmintgr.printd('executing device authentication failure workflow...')
     ret = libvmintgr.generate_report(scanner, vmconfig.devauth_report)
     faildata = libvmintgr.nexpose_parse_custom_authfail(ret)
-    # format / handle failure data
+    for ln in faildata:
+        sys.stdout.write('%s %s %s\n' % \
+            (ln['ip'].ljust(17), ln['hostname'].ljust(60), ln['credstatus']))
 
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)

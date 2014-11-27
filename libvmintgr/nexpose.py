@@ -80,15 +80,19 @@ def nexpose_parse_custom_authfail(buf):
         newent = {}
         newent['ip'] = i[0]
         newent['hostname'] = i[1]
+        if newent['hostname'] == '':
+            newent['hostname'] = 'unknown'
         newent['os'] = i[2]
         newent['ncrit'] = i[3]
         newent['nsevere'] = i[4]
         newent['exploits'] = i[5]
         newent['riskscore'] = i[6]
         if i[7] == 'All credentials failed':
-            newent['credstatus'] = False
+            newent['credstatus'] = 'FAIL'
+        elif i[7] == 'N/A':
+            newent['credstatus'] = 'NA'
         else:
-            newent['credstatus'] = True
+            newent['credstatus'] = 'OK'
         ret.append(newent)
     return ret
 
@@ -204,7 +208,10 @@ def report_list(scanner):
         newrep['id'] = s.attrib['cfg-id']
         newrep['last-generated'] = s.attrib['generated-on']
         newrep['status'] = s.attrib['status']
-        newrep['url'] = s.attrib['report-URI']
+        if 'report-URI' in s.attrib:
+            newrep['url'] = s.attrib['report-URI']
+        else:
+            newrep['url'] = None
         ret[newrep['id']] = newrep
     return ret
 
