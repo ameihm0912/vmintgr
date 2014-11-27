@@ -194,6 +194,30 @@ def site_extraction(scanner):
         scanner.sitelist[siteinfo['id']] = siteinfo
     debug.printd('read %d sites' % len(scanner.sitelist))
 
+def site_update_from_file(scanner, sid, path):
+    sconf = scanner.conn.site_config(sid)
+    root = ET.fromstring(sconf)
+    sitetag = root.find('Site')
+    ne = sitetag.find('Hosts')
+    fd = open(path, 'r')
+    while True:
+        buf = fd.readline()
+        if buf == None or buf == '':
+            break
+        buf = buf.strip()
+        found = False
+        for i in ne:
+            if i.text == buf:
+                found = True
+                break
+        if found:
+            continue
+        debug.printd('adding %s to site %s' % (buf, sid))
+        newsub = ET.SubElement(ne, 'host')
+        newsub.text = buf
+    fd.close()
+    scanner.conn.site_save((ET.tostring(sitetag),))
+
 def report_list(scanner):
     debug.printd('requesting report list')
     replist = scanner.conn.report_listing()

@@ -11,6 +11,8 @@ class VMConfig(object):
         self.vms_server = None
         self.vms_port = 0
 
+        self.devsync_map = {}
+
         self.devauth_report = None
 
         if fn == None:
@@ -27,6 +29,8 @@ class VMConfig(object):
                 mdesc = 'vms'
             elif s == 'device_authfail':
                 mdesc = 'device_authfail'
+            elif s == 'device_sync':
+                mdesc = 'device_sync'
             else:
                 sys.stderr.write('invalid configuration section %s\n' % \
                     s)
@@ -34,6 +38,9 @@ class VMConfig(object):
             parsefunc = getattr(self, 'parse_' + s)
             for k, v in self._cp.items(s):
                 parsefunc(k, v, s)
+
+    def parse_device_sync(self, k, v, s):
+        self.devsync_map[k] = v
 
     def parse_device_authfail(self, k, v, s):
         if k == 'repid':
