@@ -91,6 +91,9 @@ def domain():
             confpath = a
 
     vmconfig = libvmintgr.VMConfig(confpath)
+
+    libvmintgr.load_exemptions(vmconfig.exempt_dir)
+
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)
     scanner = libvmintgr.nexpose_connector(vmconfig.vms_server, \

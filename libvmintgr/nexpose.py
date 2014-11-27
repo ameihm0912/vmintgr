@@ -14,6 +14,7 @@ sys.path.append('../../pnexpose')
 import pnexpose
 import debug
 import vuln
+import exempt
 
 cookiejar = None
 nx_console_server = None
@@ -87,12 +88,15 @@ def nexpose_parse_custom_authfail(buf):
         newent['nsevere'] = i[4]
         newent['exploits'] = i[5]
         newent['riskscore'] = i[6]
-        if i[7] == 'All credentials failed':
-            newent['credstatus'] = 'FAIL'
-        elif i[7] == 'N/A':
-            newent['credstatus'] = 'NA'
+        if exempt.ip_exempt(i[0]):
+            newent['credstatus'] = 'EXEMPT'
         else:
-            newent['credstatus'] = 'OK'
+            if i[7] == 'All credentials failed':
+                newent['credstatus'] = 'FAIL'
+            elif i[7] == 'N/A':
+                newent['credstatus'] = 'NA'
+            else:
+                newent['credstatus'] = 'OK'
         ret.append(newent)
     return ret
 
@@ -195,11 +199,18 @@ def site_extraction(scanner):
     debug.printd('read %d sites' % len(scanner.sitelist))
 
 def site_update_from_file(scanner, sid, path):
+    debug.printd('updating site %s from %s' % (sid, path))
     sconf = scanner.conn.site_config(sid)
     root = ET.fromstring(sconf)
     sitetag = root.find('Site')
     ne = sitetag.find('Hosts')
-    fd = open(path, 'r')
+    updates = 0
+    try:
+        fd = open(path, 'r')
+    except IOError:
+        sys.stderr.write('unable to read %s, skipping updates ' \
+        'for site %s\n' % (path, sid))
+        return
     while True:
         buf = fd.readline()
         if buf == None or buf == '':
@@ -215,7 +226,11 @@ def site_update_from_file(scanner, sid, path):
         debug.printd('adding %s to site %s' % (buf, sid))
         newsub = ET.SubElement(ne, 'host')
         newsub.text = buf
+        updates += 1
     fd.close()
+    if updates == 0:
+        debug.printd('no updates needed for site %s' % sid)
+        return
     scanner.conn.site_save((ET.tostring(sitetag),))
 
 def report_list(scanner):
