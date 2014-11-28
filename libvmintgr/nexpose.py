@@ -9,6 +9,7 @@ import urllib
 import urllib2
 import cookielib
 import re
+import netaddr
 
 sys.path.append('../../pnexpose')
 
@@ -220,26 +221,59 @@ def site_update_from_file(scanner, sid, path):
         sys.stderr.write('unable to read %s, skipping updates ' \
         'for site %s\n' % (path, sid))
         return
+
+    # Expand address ranges to simplify the update
+    for i in ne[:]:
+        if i.tag != 'range':
+            continue
+        low = i.get('from')
+        high = i.get('to')
+        if high == None:
+            continue
+        ipl = list(netaddr.iter_iprange(low, high))
+        debug.printd('expanding %s -> %s in site %s' % (low, high, sid))
+        ne.remove(i)
+        for j in ipl:
+            newsub = ET.SubElement(ne, 'range')
+            newsub.set('from', str(j))
+        
+    # First remove anything from the site we have a known exemption for
+    for i in ne[:]:
+        if i.tag != 'range':
+            debug.printd('removing %s from %s, not a range tag' % \
+                (i.text, sid))
+            ne.remove(i)
+            continue
+        checkip = i.get('from')
+        if exempt.ip_exempt(checkip):
+            debug.printd('removing %s from site %s as it is exempted' % \
+                (checkip, sid))
+            ne.remove(i)
+            updates += 1
+
     while True:
         buf = fd.readline()
         if buf == None or buf == '':
             break
         buf = buf.strip()
         found = False
+        if exempt.ip_exempt(buf):
+            continue
         for i in ne:
-            if i.text == buf:
+            if i.get('from') == buf:
                 found = True
                 break
         if found:
             continue
         debug.printd('adding %s to site %s' % (buf, sid))
-        newsub = ET.SubElement(ne, 'host')
-        newsub.text = buf
+        newsub = ET.SubElement(ne, 'range')
+        newsub.set('from', buf)
         updates += 1
     fd.close()
     if updates == 0:
         debug.printd('no updates needed for site %s' % sid)
         return
+    debug.printd('%d updates for site %s' % (updates, sid))
     scanner.conn.site_save((ET.tostring(sitetag),))
 
 def report_list(scanner):

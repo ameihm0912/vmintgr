@@ -1,6 +1,7 @@
 import sys
 import os
 import ConfigParser
+import re
 from netaddr import IPNetwork, IPAddress
 
 import debug
@@ -10,6 +11,9 @@ exemptlist_nets = []
 
 def ip_exempt(ip):
     if ip == '':
+        return False
+    # Only look at IP addresses here
+    if not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip):
         return False
     if ip in exemptlist_hosts:
         return True
