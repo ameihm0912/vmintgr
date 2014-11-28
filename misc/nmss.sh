@@ -21,4 +21,6 @@ cat $tmpfile | grep '\/open\/' | awk '{ print $2 }' > $out
 rm -f ${2}/lastscan
 (cd ${2} && ln -s $outfile lastscan)
 
+rm -f $tmpfile
+
 exit 0
