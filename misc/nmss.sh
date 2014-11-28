@@ -17,6 +17,7 @@ out="${2}/${outfile}"
 nmap -iL $1 -sS -p 22 -P0 -T4 -oG $tmpfile
 
 cat $tmpfile | grep '\/open\/' | awk '{ print $2 }' > $out
+cat $tmpfile | grep '\/filtered\/' | awk '{ print $2 }' > ${out}.filtered
 
 rm -f ${2}/lastscan
 (cd ${2} && ln -s $outfile lastscan)
