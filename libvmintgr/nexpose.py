@@ -8,6 +8,7 @@ import pytz
 import urllib
 import urllib2
 import cookielib
+import re
 
 sys.path.append('../../pnexpose')
 
@@ -83,6 +84,14 @@ def nexpose_parse_custom_authfail(buf):
         newent['hostname'] = i[1]
         if newent['hostname'] == '':
             newent['hostname'] = 'unknown'
+        # In some cases with a newly added host within a site that cannot
+        # be authenticated to, Nexpose will put the site address in the
+        # hostname column and leave the IP blank; if this happens just set
+        # the IP address to the hostname, which is the IP anyway
+        if newent['ip'] == '':
+            if re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
+                newent['hostname']):
+                newent['ip'] = newent['hostname']
         newent['os'] = i[2]
         newent['ncrit'] = i[3]
         newent['nsevere'] = i[4]

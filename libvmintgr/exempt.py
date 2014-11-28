@@ -9,6 +9,8 @@ exemptlist_hosts = []
 exemptlist_nets = []
 
 def ip_exempt(ip):
+    if ip == '':
+        return False
     if ip in exemptlist_hosts:
         return True
     for i in exemptlist_nets:
