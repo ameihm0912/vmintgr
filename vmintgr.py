@@ -102,6 +102,9 @@ def domain():
     if replistmode:
         wf_list_reports()
     elif authfailmode:
+        if vmconfig.devauth_report == None:
+            sys.stderr.write('must set option device_authfail/repid to use -a\n')
+            sys.exit(1)
         wf_device_auth_fail()
     elif agroupmode:
         wf_asset_grouping()
