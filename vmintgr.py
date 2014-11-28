@@ -38,13 +38,16 @@ def wf_site_sync():
 
 def wf_device_auth_fail():
     libvmintgr.printd('executing device authentication failure workflow...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
     ret = libvmintgr.generate_report(scanner, vmconfig.devauth_report)
-    faildata = libvmintgr.nexpose_parse_custom_authfail(ret)
+    faildata = libvmintgr.nexpose_parse_custom_authfail(scanner, ret)
     # XXX Add exemption handling here, probably based on a wildcard host
     # match or CIDR match
     for ln in faildata:
-        sys.stdout.write('%s %s %s\n' % \
-            (ln['ip'].ljust(17), ln['hostname'].ljust(60), ln['credstatus']))
+        sys.stdout.write('%s %s %s %s\n' % \
+            (ln['ip'].ljust(17), ln['hostname'].ljust(60),
+            ln['credstatus'].ljust(10), ln['sites']))
 
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)

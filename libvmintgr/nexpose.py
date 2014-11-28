@@ -64,7 +64,7 @@ def generate_report(scanner, repid):
     ret = nexpose_fetch_report(repid, replist[repid]['url'])
     return ret
 
-def nexpose_parse_custom_authfail(buf):
+def nexpose_parse_custom_authfail(scanner, buf):
     # This function operates on the following custom query associated with the
     # auth failure report:
     #
@@ -93,6 +93,21 @@ def nexpose_parse_custom_authfail(buf):
             if re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
                 newent['hostname']):
                 newent['ip'] = newent['hostname']
+
+        sstr = None
+        for s in scanner.sitelist.keys():
+            siteent = scanner.sitelist[s]
+            sn = siteent['name']
+            for aent in siteent['assets']:
+                if aent['address'] == newent['ip']:
+                    if sstr == None:
+                        sstr = siteent['name']
+                    else:
+                        sstr = sstr + ',' + siteent['name']
+        if sstr == None:
+            sstr = 'NA'
+        newent['sites'] = sstr
+
         newent['os'] = i[2]
         newent['ncrit'] = i[3]
         newent['nsevere'] = i[4]
