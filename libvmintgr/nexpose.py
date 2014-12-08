@@ -269,6 +269,7 @@ def site_update_from_file(scanner, sid, path):
             ne.remove(i)
             updates += 1
 
+    addrtable = []
     while True:
         buf = fd.readline()
         if buf == None or buf == '':
@@ -277,6 +278,7 @@ def site_update_from_file(scanner, sid, path):
         found = False
         if exempt.ip_exempt(buf):
             continue
+        addrtable.append(buf)
         for i in ne:
             if i.get('from') == buf:
                 found = True
@@ -288,6 +290,16 @@ def site_update_from_file(scanner, sid, path):
         newsub.set('from', buf)
         updates += 1
     fd.close()
+
+    # Finally, remove any addresses in the site that don't seem to exist
+    # anymore according to host discovery
+    for i in ne[:]:
+        a = i.get('from')
+        if a not in addrtable:
+            debug.printd('removing %s from site %s' % (a, sid))
+            ne.remove(i)
+            updates += 1
+
     if updates == 0:
         debug.printd('no updates needed for site %s' % sid)
         return
