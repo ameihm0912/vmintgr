@@ -167,6 +167,8 @@ def vuln_extraction(scanner):
     ORDER BY ds.name, da.ip_address
     '''
 
+    debug.printd('requesting vulnerability details')
+
     sites = scanner.sitelist.keys()
     if len(sites) == 0:
         return
@@ -195,7 +197,15 @@ def vuln_extraction(scanner):
             dstr = i[7]
         dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
         dt = dt.replace(tzinfo=pytz.UTC)
+        v.discovered_date = dt
         v.cvss = float(i[11])
+        for i in i[12].split(','):
+            buf = i.strip()
+            if 'CVE-' in buf:
+                if v.cves == None:
+                    v.cves = [buf,]
+                else:
+                    v.cves.append(buf)
 
         linked += vuln_instance_link(v, scanner)
 
@@ -207,6 +217,7 @@ def vuln_instance_link(v, scanner):
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
             if a['id'] == v.assetid:
+                print v
                 a['vulns'].append(v)
                 ret += 1
     return ret

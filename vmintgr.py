@@ -29,7 +29,8 @@ def usage():
         '\t-h\t\tUsage\n' \
         '\t-R\t\tStored report list\n' \
         '\t-S\t\tSite list\n' \
-        '\t-s\t\tSite sync\n')
+        '\t-s\t\tSite sync\n' \
+        '\t-v\t\tProcess and escalate vulnerabilities\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
@@ -79,6 +80,12 @@ def wf_device_auth_fail():
             (ln['ip'].ljust(17), ln['hostname'].ljust(60),
             ln['credstatus'].ljust(10), ln['sites']))
 
+def wf_vuln_proc():
+    libvmintgr.printd('executing vulnerability processing automation...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    libvmintgr.vuln_extraction(scanner)
+
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)
     for repent in reports.keys():
@@ -107,9 +114,10 @@ def domain():
     grouplistmode = False
     purgemode = False
     selection = False
+    vulnproc = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSs')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSsV')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -140,6 +148,9 @@ def domain():
             selection = True
         elif o == '-s':
             sitesyncmode = True
+            selection = True
+        elif o == '-V':
+            vulnproc = True
             selection = True
         elif o == '-f':
             confpath = a
@@ -178,6 +189,8 @@ def domain():
         wf_site_list()
     elif sitesyncmode:
         wf_site_sync()
+    elif vulnproc:
+        wf_vuln_proc()
 
 if __name__ == '__main__':
     domain()
