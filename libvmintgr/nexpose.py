@@ -222,7 +222,6 @@ def vuln_instance_link(v, scanner):
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
             if a['id'] == v.assetid:
-                print v
                 a['vulns'].append(v)
                 ret += 1
     return ret
