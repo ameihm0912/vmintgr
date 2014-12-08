@@ -228,6 +228,9 @@ def site_update_from_file(scanner, sid, path):
     sconf = scanner.conn.site_config(sid)
     root = ET.fromstring(sconf)
     sitetag = root.find('Site')
+    if sitetag == None:
+        raise Exception('response from server for site %s invalid' % \
+            sid)
     ne = sitetag.find('Hosts')
     updates = 0
     try:
