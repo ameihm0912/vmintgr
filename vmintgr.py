@@ -15,6 +15,7 @@ vmconfig = None
 debug = False
 scanner = None
 pidfd = None
+vmdbconn = None
 
 def usage():
     sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n' \
@@ -96,6 +97,7 @@ def domain():
     global vmconfig
     global debug
     global scanner
+    global vmdbconn
     confpath = None
     replistmode = False
     authfailmode = False
@@ -150,6 +152,8 @@ def domain():
 
     open_pidfile()
 
+    vmdbconn = libvmintgr.db_init(vmconfig.sql_path)
+    vmdbconn.create()
     libvmintgr.load_exemptions(vmconfig.exempt_dir)
 
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
