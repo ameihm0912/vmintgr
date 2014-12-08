@@ -224,6 +224,23 @@ def site_extraction(scanner):
         scanner.sitelist[siteinfo['id']] = siteinfo
     debug.printd('read %d sites' % len(scanner.sitelist))
 
+def group_purge(scanner, gid):
+    remlist = []
+    debug.printd('purging assets from group %s' % gid)
+    grpconfig = scanner.conn.asset_group_config(gid)
+    root = ET.fromstring(grpconfig)
+    a = root.find('AssetGroup')
+    if a.attrib['id'] != gid:
+        raise Exception('server returned incorrect asset group')
+    dlist = a.find('Devices')
+    for i in dlist:
+        remlist.append(i.attrib['id'])
+    debug.printd('removing %d assets from group %s' % \
+        (len(remlist), gid))
+    for i in remlist:
+        scanner.conn.device_delete(i)
+        debug.printd('removed device %s' % i)
+
 def site_update_from_file(scanner, sid, path):
     debug.printd('updating site %s from %s' % (sid, path))
     sconf = scanner.conn.site_config(sid)

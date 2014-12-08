@@ -14,7 +14,7 @@ debug = False
 scanner = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadGhRSs] [-f path]\n')
+    sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
@@ -30,6 +30,12 @@ def wf_group_list():
         sys.stdout.write('%s %s\n' % \
             (str(i).ljust(6), grpent['name']))
 
+def wf_auto_purge():
+    libvmintgr.printd('starting asset purge workflow...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    libvmintgr.group_purge(scanner, vmconfig.purge_groupid)
+    
 def wf_site_list():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
@@ -77,9 +83,10 @@ def domain():
     sitelistmode = False
     sitesyncmode = False
     grouplistmode = False
+    purgemode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aadf:GhRSs')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSs')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -96,6 +103,8 @@ def domain():
             replistmode = True
         elif o == '-d':
             libvmintgr.setdebugging(True)
+        elif o == '-D':
+            purgemode = True
         elif o == '-G':
             grouplistmode = True
         elif o == '-S':
@@ -121,6 +130,8 @@ def domain():
             sys.stderr.write('must set option device_authfail/repid to use -a\n')
             sys.exit(1)
         wf_device_auth_fail()
+    elif purgemode:
+        wf_auto_purge()
     elif agroupmode:
         wf_asset_grouping()
     elif grouplistmode:

@@ -13,6 +13,8 @@ class VMConfig(object):
 
         self.exempt_dir = None
 
+        self.purge_groupid = None
+
         self.devsync_map = {}
 
         self.devauth_report = None
@@ -35,6 +37,8 @@ class VMConfig(object):
                 mdesc = 'device_sync'
             elif s == 'exemptions':
                 mdesc = 'exemptions'
+            elif s == 'autopurge':
+                mdesc = 'autopurge'
             else:
                 sys.stderr.write('invalid configuration section %s\n' % \
                     s)
@@ -42,6 +46,14 @@ class VMConfig(object):
             parsefunc = getattr(self, 'parse_' + s)
             for k, v in self._cp.items(s):
                 parsefunc(k, v, s)
+
+    def parse_autopurge(self, k, v, s):
+        if k == 'groupid':
+            self.purge_groupid = v
+        else:
+            sys.stderr.write('option %s not available under %s\n' % \
+                (k, s))
+            sys.exit(1)
 
     def parse_exemptions(self, k, v, s):
         if k == 'listdir':
