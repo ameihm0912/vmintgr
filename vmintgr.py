@@ -95,6 +95,7 @@ def domain():
     sitesyncmode = False
     grouplistmode = False
     purgemode = False
+    selection = False
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSs')
@@ -108,22 +109,33 @@ def domain():
             sys.exit(0)
         elif o == '-a':
             authfailmode = True
+            selection = True
         elif o == '-A':
             agroupmode = True
+            selection = True
         elif o == '-R':
             replistmode = True
+            selection = True
         elif o == '-d':
             libvmintgr.setdebugging(True)
         elif o == '-D':
             purgemode = True
+            selection = True
         elif o == '-G':
             grouplistmode = True
+            selection = True
         elif o == '-S':
             sitelistmode = True
+            selection = True
         elif o == '-s':
             sitesyncmode = True
+            selection = True
         elif o == '-f':
             confpath = a
+
+    if not selection:
+        sys.stderr.write('no operation selected, see usage (-h)\n')
+        sys.exit(1)
 
     vmconfig = libvmintgr.VMConfig(confpath)
 
