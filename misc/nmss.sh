@@ -14,13 +14,40 @@ tmpfile=`mktemp`
 outfile="nmss-`date +%s`.out"
 out="${2}/${outfile}"
 
-nmap -iL $1 -sS -p $3 -P0 -T4 -oG $tmpfile
+nmap -iL $1 -sS -p $3 -PE -T4 -oG $tmpfile
 
-cat $tmpfile | grep '\/open\/' | awk '{ print $2 }' | sort | uniq > $out
+while read ln; do
+	echo $ln | grep -q 'Status: Up'
+	if [ $? -eq 0 ]; then
+		ip=`echo $ln | cut -d ' ' -f 2`
+		echo $ip >> ${out}.up
+		continue
+	fi
+	echo $ln | grep -q '^Host\:.*Ports:.*/open/.*'
+	if [ $? -ne 0 ]; then
+		continue
+	fi
+	ip=`echo $ln | cut -d ' ' -f 2`
+	buf=`echo $ln | sed 's,^Host.*Ports:,,'`
+	for j in $buf; do
+		echo $j | grep -q '/open/'
+		if [ $? -ne 0 ]; then continue; fi
+		pn=`echo $j | cut -d '/' -f 1`
+		echo $ip >> ${out}.${pn}
+	done
+done < $tmpfile
+
 cat $tmpfile > ${out}.nmap
 
-rm -f ${2}/lastscan
-(cd ${2} && ln -s $outfile lastscan)
+cd $2
+rm -f lastscan*
+for i in `ls ${outfile}.* | grep '\.[[:digit:]]\+$'`; do
+	pn=`echo $i | cut -d '.' -f 3`
+	ln -s $i lastscan.${pn}
+done
+if [ -f ${outfile}.up ]; then
+	ln -s ${outfile}.up lastscan.up
+fi
 
 rm -f $tmpfile
 
