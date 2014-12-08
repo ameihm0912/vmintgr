@@ -206,6 +206,11 @@ def vuln_extraction(scanner):
                     v.cves = [buf,]
                 else:
                     v.cves.append(buf)
+            if 'RHSA-' in buf:
+                if v.rhsa == None:
+                    v.rhsa = [buf,]
+                else:
+                    v.rhsa.append(buf)
 
         linked += vuln_instance_link(v, scanner)
 
