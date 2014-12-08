@@ -10,6 +10,7 @@ class VMConfig(object):
         self.vms_type = None
         self.vms_server = None
         self.vms_port = 0
+        self.pidfile = None
 
         self.exempt_dir = None
 
@@ -85,6 +86,8 @@ class VMConfig(object):
             self.vms_server = v
         elif k == 'port':
             self.vms_port = int(v)
+        elif k == 'pidfile':
+            self.pidfile = v
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

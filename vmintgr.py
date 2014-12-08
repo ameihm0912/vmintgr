@@ -2,6 +2,8 @@
 
 import sys
 import getopt
+import fcntl
+import os
 
 sys.path.append('../pnexpose')
 
@@ -12,6 +14,7 @@ import pnexpose
 vmconfig = None
 debug = False
 scanner = None
+pidfd = None
 
 def usage():
     sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n' \
@@ -83,6 +86,12 @@ def wf_list_reports():
             reports[repent]['last-generated'],
             reports[repent]['status']))
 
+def open_pidfile():
+    global pidfd
+    pidfd = open(vmconfig.pidfile, 'w')
+    fcntl.lockf(pidfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    pidfd.write(str(os.getpid()))
+
 def domain():
     global vmconfig
     global debug
@@ -138,6 +147,8 @@ def domain():
         sys.exit(1)
 
     vmconfig = libvmintgr.VMConfig(confpath)
+
+    open_pidfile()
 
     libvmintgr.load_exemptions(vmconfig.exempt_dir)
 
