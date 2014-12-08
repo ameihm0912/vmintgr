@@ -230,6 +230,8 @@ def group_purge(scanner, gid):
     grpconfig = scanner.conn.asset_group_config(gid)
     root = ET.fromstring(grpconfig)
     a = root.find('AssetGroup')
+    if a == None:
+        raise Exception('autopurge group not found')
     if a.attrib['id'] != gid:
         raise Exception('server returned incorrect asset group')
     dlist = a.find('Devices')
