@@ -14,12 +14,21 @@ debug = False
 scanner = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadhRSs] [-f path]\n')
+    sys.stdout.write('usage: vmintgr.py [-AadGhRSs] [-f path]\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
+
+def wf_group_list():
+    libvmintgr.printd('starting asset group list workflow...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    for i in scanner.grouplist.keys():
+        grpent = scanner.grouplist[i]
+        sys.stdout.write('%s %s\n' % \
+            (str(i).ljust(6), grpent['name']))
 
 def wf_site_list():
     libvmintgr.site_extraction(scanner)
@@ -67,9 +76,10 @@ def domain():
     agroupmode = False
     sitelistmode = False
     sitesyncmode = False
+    grouplistmode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aadf:hRSs')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aadf:GhRSs')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -86,6 +96,8 @@ def domain():
             replistmode = True
         elif o == '-d':
             libvmintgr.setdebugging(True)
+        elif o == '-G':
+            grouplistmode = True
         elif o == '-S':
             sitelistmode = True
         elif o == '-s':
@@ -111,6 +123,8 @@ def domain():
         wf_device_auth_fail()
     elif agroupmode:
         wf_asset_grouping()
+    elif grouplistmode:
+        wf_group_list()
     elif sitelistmode:
         wf_site_list()
     elif sitesyncmode:

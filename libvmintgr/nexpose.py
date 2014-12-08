@@ -26,6 +26,7 @@ class nexpose_connector(object):
     def __init__(self, server, port, user, pw):
         self.conn = pnexpose.nexposeClient(server, port, user, pw)
         self.sitelist = {}
+        self.grouplist = {}
 
 def nexpose_consolelogin(server, port, user, pw):
     global nx_console_server
@@ -345,3 +346,14 @@ def asset_extraction(scanner):
                 newdev['address'] = d.attrib['address']
                 newdev['vulns'] = []
                 scanner.sitelist[sid]['assets'].append(newdev)
+
+    debug.printd('requesting asset groups')
+    grpdata = scanner.conn.asset_group_listing()
+    root = ET.fromstring(grpdata)
+    for g in root:
+        if g.tag != 'AssetGroupSummary':
+            continue
+        newgrp = {}
+        newgrp['name'] = g.attrib['name']
+        newgrp['id'] = g.attrib['id']
+        scanner.grouplist[int(g.attrib['id'])] = newgrp
