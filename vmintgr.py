@@ -14,7 +14,18 @@ debug = False
 scanner = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n')
+    sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n' \
+        '\n' \
+        '\t-A\t\tAsset grouping\n' \
+        '\t-a\t\tDevice authentication failures\n' \
+        '\t-d\t\tDebug mode\n' \
+        '\t-D\t\tDevice auto-purge\n' \
+        '\t-f path\t\tPath to configuration file\n' \
+        '\t-G\t\tAsset group list\n' \
+        '\t-h\t\tUsage\n' \
+        '\t-R\t\tStored report list\n' \
+        '\t-S\t\tSite list\n' \
+        '\t-s\t\tSite sync\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
