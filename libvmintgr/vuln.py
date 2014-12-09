@@ -109,7 +109,10 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     debug.printd('using db asset %d' % dbassetid)
 
     for v in vlist:
-        dbconn.add_vulnerability(v, dbassetid)
+        # We don't want to look at everything, query the handlers minimum
+        # CVSS value to see if we should proceed
+        if v.cvss >= vauto.mincvss:
+            dbconn.add_vulnerability(v, dbassetid)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn
