@@ -1,6 +1,7 @@
 import sys
 import os
 import ConfigParser
+from netaddr import *
 
 import debug
 
@@ -9,11 +10,30 @@ dbconn = None
 
 class VulnAutoEntry(object):
     def __init__(self, name):
-        self.name = None
+        self.name = name
         self.mincvss = None
 
+        self._match_ip = None
+        self._match_net = None
+
     def add_match(self, val):
-        pass
+        if '/' in val:
+            self._match_net = IPNetwork(val)
+        else:
+            self._match_ip = IPAddress(val)
+
+    def ip_test(self, ipstr):
+        ip = IPAddress(ipstr)
+
+        # First try the IP
+        if self._match_ip != None:
+            if self._match_ip == ip:
+                return 32
+
+        if ip in self._match_net:
+            return self._match_net.netmask.bits().count('1')
+
+        return -1
 
 class vulnerability(object):
     def __init__(self):
@@ -39,8 +59,25 @@ class vulnerability(object):
                 self.discovered_date)
         return buf
 
-def vuln_proc_pipeline(vlist, aid, address):
-    pass
+def vuln_auto_finder(address, mac, hostname):
+    cand = None
+    last = -1
+    for va in vulnautolist:
+        ret = va.ip_test(address)
+        if ret == -1:
+            continue
+        if ret > last:
+            cand = va
+            last = ret
+    if cand != None:
+        debug.printd('using VulnAutoEntry %s (score: %d)' % (cand.name, last))
+    else:
+        debug.printd('unable to match automation handler')
+    return cand
+
+def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
+    debug.printd('vulnerability process pipeline for asset id %d' % aid)
+    vauto = vuln_auto_finder(address, mac, hostname)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn

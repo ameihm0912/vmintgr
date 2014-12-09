@@ -187,6 +187,8 @@ def add_asset_properties(scanner):
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
             if a['id'] not in atable.keys():
+                a['hostname'] = ''
+                a['macaddress'] = ''
                 continue
             a['hostname'] = atable[a['id']][2]
             a['macaddress'] = atable[a['id']][3]
@@ -277,7 +279,8 @@ def vuln_extraction(scanner):
             if len(a['vulns']) == 0:
                 continue
             vuln.vuln_proc_pipeline(a['vulns'],
-                a['id'], a['address'])
+                a['id'], a['address'], a['macaddress'],
+                a['hostname'])
 
 def vuln_instance_link(v, scanner):
     ret = 0
