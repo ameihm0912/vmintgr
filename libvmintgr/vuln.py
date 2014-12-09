@@ -101,7 +101,7 @@ def load_vulnauto_list(path):
                 pass
             elif k == 'match':
                 n.add_match(v)
-            elif k == 'tracker':
+            elif k == 'matchon':
                 # Unused right now
                 pass
             else:
