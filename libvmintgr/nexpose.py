@@ -220,7 +220,6 @@ def vuln_extraction(scanner):
     JOIN dim_protocol dp USING (protocol_id) 
     JOIN dim_service dsvc USING (service_id) 
     JOIN vuln_references vr USING (vulnerability_id) 
-    WHERE inet(da.ip_address) << inet '10.8.75.0/24'
     ORDER BY ds.name, da.ip_address
     '''
 
