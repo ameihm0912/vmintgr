@@ -26,13 +26,44 @@ class VMIntDB(object):
 
         c.execute('''CREATE TABLE IF NOT EXISTS assets
             (id INTEGER PRIMARY KEY, uid TEXT, aid INTEGER, ip TEXT,
-            hostname TEXT, mac TEXT)''')
+            hostname TEXT, mac TEXT,
+            UNIQUE (uid))''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS vulns
             (id INTEGER PRIMARY KEY, asset INTEGER,
             vid INTEGER, title TEXT, cvss REAL,
+            UNIQUE (asset, vid),
             FOREIGN KEY(asset) REFERENCES assets(id))''')
 
+        c.execute('''CREATE TABLE IF NOT EXISTS cves
+            (id INTEGER PRIMARY KEY, vid INTEGER, cve TEXT,
+            UNIQUE (vid, cve),
+            FOREIGN KEY (vid) REFERENCES vulns(vid))''')
+
+        c.execute('''CREATE TABLE IF NOT EXISTS rhsas
+            (id INTEGER PRIMARY KEY, vid INTEGER, rhsa TEXT,
+            UNIQUE (vid, rhsa),
+            FOREIGN KEY (vid) REFERENCES vulns(vid))''')
+
+    def add_references(self, v, vid):
+        c = self._conn.cursor()
+
+        if v.cves != None:
+            for cve in v.cves:
+                try:
+                    c.execute('''INSERT INTO cves VALUES (NULL,
+                        %s, "%s")''' % (vid, cve))
+                except sqlite3.IntegrityError:
+                    continue
+        if v.rhsa != None:
+            for rhsa in v.rhsa:
+                try:
+                    c.execute('''INSERT INTO rhsas VALUES (NULL,
+                        %s, "%s")''' % (vid, rhsa))
+                except sqlite3.IntegrityError:
+                    continue
+        self._conn.commit()
+            
     def add_vulnerability(self, v, dbassetid):
         c = self._conn.cursor()
         c.execute('''SELECT id, asset, vid, cvss FROM vulns
@@ -44,6 +75,7 @@ class VMIntDB(object):
                 %s, "%s", %f)''' % (dbassetid, v.vid,
                 v.title, v.cvss))
             self._conn.commit()
+        self.add_references(v, v.vid)
 
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()
