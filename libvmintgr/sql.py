@@ -1,4 +1,6 @@
 import sqlite3
+import datetime
+import pytz
 
 import vuln
 
@@ -32,6 +34,7 @@ class VMIntDB(object):
         c.execute('''CREATE TABLE IF NOT EXISTS vulns
             (id INTEGER PRIMARY KEY, asset INTEGER,
             vid INTEGER, title TEXT, cvss REAL,
+            detected INTEGER,
             UNIQUE (asset, vid),
             FOREIGN KEY(asset) REFERENCES assets(id))''')
 
@@ -72,8 +75,8 @@ class VMIntDB(object):
         if len(rows) == 0:
             # This is a new issue for this asset
             c.execute('''INSERT INTO vulns VALUES (NULL, %d,
-                %s, "%s", %f)''' % (dbassetid, v.vid,
-                v.title, v.cvss))
+                %s, "%s", %f, %d)''' % (dbassetid, v.vid,
+                v.title, v.cvss, v.discovered_date_unix))
             self._conn.commit()
         self.add_references(v, v.vid)
 

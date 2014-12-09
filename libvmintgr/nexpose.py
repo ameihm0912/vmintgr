@@ -256,6 +256,10 @@ def vuln_extraction(scanner):
         dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
         dt = dt.replace(tzinfo=pytz.UTC)
         v.discovered_date = dt
+
+        v.discovered_date_unix = int((v.discovered_date - \
+            datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)).total_seconds())
+
         v.cvss = float(i[11])
         for i in i[12].split(','):
             buf = i.strip()

@@ -45,6 +45,7 @@ class vulnerability(object):
         self.macaddr = None
         self.title = None
         self.discovered_date = None
+        self.discovered_date_unix = None
         self.cves = None
         self.cvss = None
         self.rhsa = None
