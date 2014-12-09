@@ -30,6 +30,7 @@ def usage():
         '\t-R\t\tStored report list\n' \
         '\t-S\t\tSite list\n' \
         '\t-s\t\tSite sync\n' \
+        '\t-t\t\tReport test\n' \
         '\t-v\t\tProcess and escalate vulnerabilities\n')
 
 def wf_asset_grouping():
@@ -52,6 +53,10 @@ def wf_auto_purge():
     libvmintgr.asset_extraction(scanner)
     libvmintgr.group_purge(scanner, vmconfig.purge_groupid)
     
+def wf_reptest():
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.reptest(scanner)
+
 def wf_site_list():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
@@ -115,9 +120,10 @@ def domain():
     purgemode = False
     selection = False
     vulnproc = False
+    reptest = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSsV')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSsVt')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -148,6 +154,9 @@ def domain():
             selection = True
         elif o == '-s':
             sitesyncmode = True
+            selection = True
+        elif o == '-t':
+            reptest = True
             selection = True
         elif o == '-V':
             vulnproc = True
@@ -192,6 +201,8 @@ def domain():
         wf_site_sync()
     elif vulnproc:
         wf_vuln_proc()
+    elif reptest:
+        wf_reptest()
 
 if __name__ == '__main__':
     domain()

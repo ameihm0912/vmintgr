@@ -137,6 +137,25 @@ def nexpose_fetch_report(repid, reploc):
     resp = urllib2.urlopen(req)
     return resp.read()
 
+def reptest(scanner):
+    squery = '''
+    SELECT da.ip_address, da.host_name, os.name, critical_vulnerabilities, severe_vulnerabilities,
+    exploits, riskscore, aggregated_credential_status_description   
+    FROM fact_asset    
+    JOIN dim_aggregated_credential_status USING(aggregated_credential_status_id)
+    JOIN dim_asset da USING(asset_id)
+    JOIN dim_operating_system os USING(operating_system_id)
+    '''
+
+    debug.printd('adhoc report test')
+
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    ret = scanner.conn.adhoc_report(squery, sites)
+    sys.exit(0)
+
 def vuln_extraction(scanner):
     squery = '''
     WITH 
