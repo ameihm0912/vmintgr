@@ -4,6 +4,16 @@ import ConfigParser
 
 import debug
 
+vulnautolist = []
+
+class VulnAutoEntry(object):
+    def __init__(self, name):
+        self.name = None
+        self.mincvss = None
+
+    def add_match(self, val):
+        pass
+
 class vulnerability(object):
     def __init__(self):
         self.sitename = None
@@ -40,4 +50,19 @@ def load_vulnauto_list(path):
     cp.read(path)
 
     for s in cp.sections():
-        pass
+        n = VulnAutoEntry(s)
+        for k, v in cp.items(s):
+            if k == 'mincvss':
+                n.mincvss = float(v)
+                pass
+            elif k == 'match':
+                n.add_match(v)
+            elif k == 'tracker':
+                # Unused right now
+                pass
+            else:
+                sys.stderr.write('vulnauto option %s not available under ' \
+                    '%s\n' % (k, s))
+                sys.exit(1)
+        vulnautolist.append(n)
+            
