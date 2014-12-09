@@ -175,7 +175,7 @@ def domain():
     vmdbconn = libvmintgr.db_init(vmconfig.sql_path)
     vmdbconn.create()
     libvmintgr.load_exemptions(vmconfig.exempt_dir)
-    libvmintgr.load_vulnauto(vmconfig.vulnauto_dir)
+    libvmintgr.load_vulnauto(vmconfig.vulnauto_dir, vmdbconn)
 
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)

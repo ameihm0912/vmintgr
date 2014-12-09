@@ -5,6 +5,7 @@ import ConfigParser
 import debug
 
 vulnautolist = []
+dbconn = None
 
 class VulnAutoEntry(object):
     def __init__(self, name):
@@ -38,8 +39,14 @@ class vulnerability(object):
                 self.discovered_date)
         return buf
 
-def load_vulnauto(dirpath):
+def vuln_proc_pipeline(vlist, aid, address):
+    pass
+
+def load_vulnauto(dirpath, vmdbconn):
+    global dbconn
+
     debug.printd('reading vulnerability automation data...')
+    dbconn = vmdbconn
     dirlist = os.listdir(dirpath)
     for i in dirlist:
         load_vulnauto_list(os.path.join(dirpath, i))

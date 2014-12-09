@@ -156,6 +156,41 @@ def reptest(scanner):
     ret = scanner.conn.adhoc_report(squery, sites)
     sys.exit(0)
 
+def add_asset_properties(scanner):
+    squery = '''
+    SELECT asset_id, ds.name AS site_name, da.ip_address, da.host_name,
+    da.mac_address, dos.description AS operating_system, dht.description,
+    dos.asset_type, dos.cpe FROM dim_asset da 
+    JOIN dim_operating_system dos USING (operating_system_id) 
+    JOIN dim_host_type dht USING (host_type_id) 
+    JOIN dim_site_asset dsa USING (asset_id) 
+    JOIN dim_site ds USING (site_id)
+    '''
+
+    debug.printd('requesting additional asset properties')
+
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    vulndata = scanner.conn.adhoc_report(squery, sites)
+
+    reader = csv.reader(StringIO.StringIO(vulndata))
+    atable = {}
+    for i in reader:
+        if len(i) == 0:
+            continue
+        if i[0] == 'asset_id':
+            continue
+        atable[int(i[0])] = i[1:]
+
+    for s in scanner.sitelist.keys():
+        for a in scanner.sitelist[s]['assets']:
+            if a['id'] not in atable.keys():
+                continue
+            a['hostname'] = atable[a['id']][2]
+            a['macaddress'] = atable[a['id']][3]
+
 def vuln_extraction(scanner):
     squery = '''
     WITH 
@@ -183,6 +218,7 @@ def vuln_extraction(scanner):
     JOIN dim_protocol dp USING (protocol_id) 
     JOIN dim_service dsvc USING (service_id) 
     JOIN vuln_references vr USING (vulnerability_id) 
+    WHERE inet(da.ip_address) << inet '10.8.75.0/24'
     ORDER BY ds.name, da.ip_address
     '''
 
@@ -235,6 +271,13 @@ def vuln_extraction(scanner):
 
     debug.printd('%d vulnerabilities loaded' % nvulns)
     debug.printd('%d vulnerabilities linked' % linked)
+
+    for s in scanner.sitelist.keys():
+        for a in scanner.sitelist[s]['assets']:
+            if len(a['vulns']) == 0:
+                continue
+            vuln.vuln_proc_pipeline(a['vulns'],
+                a['id'], a['address'])
 
 def vuln_instance_link(v, scanner):
     ret = 0
@@ -399,6 +442,8 @@ def asset_extraction(scanner):
                 newdev['address'] = d.attrib['address']
                 newdev['vulns'] = []
                 scanner.sitelist[sid]['assets'].append(newdev)
+
+    add_asset_properties(scanner)
 
     debug.printd('requesting asset groups')
     grpdata = scanner.conn.asset_group_listing()
