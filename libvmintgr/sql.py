@@ -1,6 +1,8 @@
 import sqlite3
 import datetime
 import pytz
+import calendar
+import time
 
 import vuln
 
@@ -37,6 +39,12 @@ class VMIntDB(object):
             detected INTEGER,
             UNIQUE (asset, vid),
             FOREIGN KEY(asset) REFERENCES assets(id))''')
+
+        c.execute('''CREATE TABLE IF NOT EXISTS workflow
+            (id INTEGER PRIMARY KEY, vid INTEGER,
+            lasthandled INTEGER, contact INTEGER,
+            status INTEGER,
+            FOREIGN KEY(vid) REFERENCES vulns(vid))''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS cves
             (id INTEGER PRIMARY KEY, vid INTEGER, cve TEXT,
@@ -77,6 +85,8 @@ class VMIntDB(object):
             c.execute('''INSERT INTO vulns VALUES (NULL, %d,
                 %s, "%s", %f, %d)''' % (dbassetid, v.vid,
                 v.title, v.cvss, v.discovered_date_unix))
+            c.execute('''INSERT INTO workflow VALUES (NULL, %s,
+                0, %d, 0)''' % (v.vid, int(calendar.timegm(time.gmtime()))))
             self._conn.commit()
         self.add_references(v, v.vid)
 
