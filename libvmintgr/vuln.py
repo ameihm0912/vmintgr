@@ -59,6 +59,19 @@ class vulnerability(object):
                 self.discovered_date)
         return buf
 
+def asset_unique_id(address, mac, hostname, aid):
+    if mac == '':
+        u_mac = 'NA'
+    else:
+        u_mac = mac
+    if hostname == '':
+        u_hostname = 'NA'
+    else:
+        u_hostname = hostname
+    ret = '0|%s|%s|%s|%s' % (aid, address, u_hostname, u_mac)
+    debug.printd('using identifier %s' % ret)
+    return ret
+
 def vuln_auto_finder(address, mac, hostname):
     cand = None
     last = -1
@@ -78,6 +91,18 @@ def vuln_auto_finder(address, mac, hostname):
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     debug.printd('vulnerability process pipeline for asset id %d' % aid)
     vauto = vuln_auto_finder(address, mac, hostname)
+    if vauto == -1:
+        debug.printd('skipping pipeline for asset id %d, no handler' % aid)
+        return
+
+    uid = asset_unique_id(address, mac, hostname, aid)
+
+    # XXX We will probably want to add something here to search and update
+    # any existing references for this asset where we had less information,
+    # this will likely need some sort of partial matching on fields.
+
+    for v in vlist:
+        pass
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn
