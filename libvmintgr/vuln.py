@@ -4,6 +4,7 @@ import ConfigParser
 from netaddr import *
 
 import debug
+import sql
 
 vulnautolist = []
 dbconn = None
@@ -47,14 +48,15 @@ class vulnerability(object):
         self.cves = None
         self.cvss = None
         self.rhsa = None
+        self.vid = None
 
     def __str__(self):
-        buf = '----- %d %s | %s\n' \
+        buf = '----- %d %s | %s | %s\n' \
             'sitename: %s\n' \
             'hostname: %s\n' \
             'macaddr: %s\n' \
             'discovered: %s\n' \
-            '----' % (self.assetid, self.ipaddr, self.title,
+            '----' % (self.assetid, self.ipaddr, self.title, self.vid,
                 self.sitename, self.hostname, self.macaddr,
                 self.discovered_date)
         return buf
@@ -101,8 +103,12 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     # any existing references for this asset where we had less information,
     # this will likely need some sort of partial matching on fields.
 
+    # Make sure the asset exists in the database, if not add it
+    dbassetid = dbconn.add_asset(uid, aid, address, mac, hostname)
+    debug.printd('using db asset %d' % dbassetid)
+
     for v in vlist:
-        pass
+        dbconn.add_vulnerability(v, dbassetid)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn

@@ -210,7 +210,7 @@ def vuln_extraction(scanner):
     CASE WHEN favi.port = -1 THEN NULL ELSE favi.port END AS port, 
     dp.name AS protocol, dsvc.name AS service,
     round(dv.cvss_score::numeric, 2) AS cvss_score, vr.references, dv.exploits,
-    dv.malware_kits
+    dv.malware_kits, dv.vulnerability_id
     FROM fact_asset_vulnerability_instance favi 
     JOIN dim_asset da USING (asset_id) 
     JOIN dim_vulnerability dv USING (vulnerability_id) 
@@ -247,6 +247,7 @@ def vuln_extraction(scanner):
         v.hostname = i[3]
         v.macaddr = i[4]
         v.title = i[5]
+        v.vid = i[15]
         idx = i[7].find('.')
         if idx > 0:
             dstr = i[7][:idx]
