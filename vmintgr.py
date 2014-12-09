@@ -31,7 +31,7 @@ def usage():
         '\t-S\t\tSite list\n' \
         '\t-s\t\tSite sync\n' \
         '\t-t\t\tReport test\n' \
-        '\t-v\t\tProcess and escalate vulnerabilities\n')
+        '\t-V\t\tProcess and escalate vulnerabilities\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
