@@ -5,6 +5,7 @@ import calendar
 import time
 
 import vuln
+import debug
 
 class VMIntDB(object):
     SVER = 1
@@ -75,6 +76,25 @@ class VMIntDB(object):
                     %s, "%s")''' % (vid, rhsa))
         self._conn.commit()
             
+    def expire_hosts(self, foundlist):
+        c = self._conn.cursor()
+
+        c.execute('''SELECT id, uid FROM assets''')
+        rows = c.fetchall()
+        for i in rows:
+            if i[1] not in foundlist:
+                self.remove_asset(i[0])
+    
+    def remove_asset(self, assetid):
+        c = self._conn.cursor()
+
+        debug.printd('removing database asset id %d' % assetid)
+        c.execute('''DELETE FROM workflow WHERE vid IN
+            (SELECT id FROM assetvulns WHERE aid = %d)''' % assetid)
+        c.execute('''DELETE FROM assetvulns WHERE aid = %d''' % assetid)
+        c.execute('''DELETE FROM assets WHERE id = %d''' % assetid)
+        self._conn.commit()
+
     def add_vuln_master(self, v):
         c = self._conn.cursor()
         exists = False
@@ -118,7 +138,10 @@ class VMIntDB(object):
             entrow = c.lastrowid
             c.execute('''INSERT INTO workflow VALUES (NULL, %s,
                 0, %d, 0)''' % (entrow, int(calendar.timegm(time.gmtime()))))
-            self._conn.commit()
+        else:
+            c.execute('''UPDATE assetvulns SET detected = %d WHERE
+                id = %d''' % (v.discovered_date_unix, rows[0][0]))
+        self._conn.commit()
 
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()

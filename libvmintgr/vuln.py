@@ -7,6 +7,7 @@ import debug
 import sql
 
 vulnautolist = []
+uidcache = []
 dbconn = None
 
 class VulnAutoEntry(object):
@@ -62,6 +63,13 @@ class vulnerability(object):
                 self.discovered_date)
         return buf
 
+def vuln_reset_uid_cache():
+    global uidcache
+    uidcache = []
+
+def expire_hosts():
+    dbconn.expire_hosts(uidcache)
+
 def asset_unique_id(address, mac, hostname, aid):
     if mac == '':
         u_mac = 'NA'
@@ -92,6 +100,8 @@ def vuln_auto_finder(address, mac, hostname):
     return cand
 
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
+    global uidcache
+
     debug.printd('vulnerability process pipeline for asset id %d' % aid)
     vauto = vuln_auto_finder(address, mac, hostname)
     if vauto == -1:
@@ -99,6 +109,8 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
         return
 
     uid = asset_unique_id(address, mac, hostname, aid)
+    if uid not in uidcache:
+        uidcache.append(uid)
 
     # XXX We will probably want to add something here to search and update
     # any existing references for this asset where we had less information,

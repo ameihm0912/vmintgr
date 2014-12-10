@@ -278,6 +278,7 @@ def vuln_extraction(scanner):
     debug.printd('%d vulnerabilities loaded' % nvulns)
     debug.printd('%d vulnerabilities linked' % linked)
 
+    vuln.vuln_reset_uid_cache()
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
             if len(a['vulns']) == 0:
@@ -285,6 +286,7 @@ def vuln_extraction(scanner):
             vuln.vuln_proc_pipeline(a['vulns'],
                 a['id'], a['address'], a['macaddress'],
                 a['hostname'])
+    vuln.expire_hosts()
 
 def vuln_instance_link(v, scanner):
     ret = 0
