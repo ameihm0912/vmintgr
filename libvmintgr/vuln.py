@@ -112,7 +112,11 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
         # We don't want to look at everything, query the handlers minimum
         # CVSS value to see if we should proceed
         if v.cvss >= vauto.mincvss:
+            debug.printd('processing vulnerability %s' % v.vid)
             dbconn.add_vulnerability(v, dbassetid)
+        else:
+            debug.printd('skipping vulnerability %s as it does not meet ' \
+                'minimum cvss score' % v.vid)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn
