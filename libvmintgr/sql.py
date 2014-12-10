@@ -13,6 +13,7 @@ class VMIntDB(object):
     def __init__(self, path):
         self._path = path
         self._conn = sqlite3.connect(self._path)
+        self._conn.row_factory = sqlite3.Row
 
     def add_version(self):
         c = self._conn.cursor()
@@ -86,6 +87,50 @@ class VMIntDB(object):
             if i[1] not in foundlist:
                 self.remove_asset(i[0])
     
+    def asset_list(self):
+        c = self._conn.cursor()
+        c.execute('''SELECT id FROM assets''')
+        return c.fetchall()
+
+    def get_workflow(self, aid):
+        c = self._conn.cursor()
+        c.execute('''SELECT assets.id, workflow.id AS wid,
+            assets.ip, assets.hostname,
+            assets.mac, vulns.nxvid, vulns.title, vulns.cvss,
+            vulns.known_exploits, vulns.known_malware,
+            assetvulns.detected,
+            workflow.lasthandled, workflow.contact, workflow.status
+            FROM assetvulns
+            JOIN assets ON assets.id = assetvulns.aid
+            JOIN vulns ON vulns.id = assetvulns.vid
+            JOIN workflow ON assetvulns.id = workflow.vid
+            WHERE assets.id = aid''')
+        rows = c.fetchall()
+
+        ret = []
+        for i in rows:
+            wfe = vuln.WorkflowElement()
+            
+            wfe.lasthandled = i['lasthandled']
+            wfe.contact = i['contact']
+            wfe.workflow_id = i['wid']
+            wfe.status = i['status']
+
+            v = vuln.vulnerability()
+            v.assetid = aid
+            v.ipaddr = i['ip'].encode('ascii', errors='ignore')
+            v.macaddr = i['mac'].encode('ascii', errors='ignore')
+            v.hostname = i['hostname'].encode('ascii', errors='ignore')
+            v.vid = i['nxvid']
+            v.discovered_date_unix = i['detected']
+            v.title = i['title'].encode('ascii', errors='ignore')
+            v.cvss = i['cvss']
+
+            wfe.vulnerability = v
+
+            ret.append(wfe)
+        return ret
+
     def remove_asset(self, assetid):
         c = self._conn.cursor()
 

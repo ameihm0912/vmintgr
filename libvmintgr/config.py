@@ -16,6 +16,7 @@ class VMConfig(object):
         self.exempt_dir = None
 
         self.vulnauto_dir = None
+        self.escdir = None
 
         self.purge_groupid = None
 
@@ -56,6 +57,8 @@ class VMConfig(object):
     def parse_vulnauto(self, k, v, s):
         if k == 'vulndir':
             self.vulnauto_dir = v
+        elif k == 'escalations':
+            self.escdir = v
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

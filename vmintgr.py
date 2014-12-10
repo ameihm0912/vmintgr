@@ -18,12 +18,13 @@ pidfd = None
 vmdbconn = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadDGhRSs] [-f path]\n' \
+    sys.stdout.write('usage: vmintgr.py [-AadDeGhRSs] [-f path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
         '\t-d\t\tDebug mode\n' \
         '\t-D\t\tDevice auto-purge\n' \
+        '\t-e\t\tEscalation pass against database\n' \
         '\t-f path\t\tPath to configuration file\n' \
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
@@ -31,7 +32,7 @@ def usage():
         '\t-S\t\tSite list\n' \
         '\t-s\t\tSite sync\n' \
         '\t-t\t\tReport test\n' \
-        '\t-V\t\tProcess and escalate vulnerabilities\n')
+        '\t-V\t\tProcess vulnerabilities from source\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
@@ -52,6 +53,10 @@ def wf_auto_purge():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
     libvmintgr.group_purge(scanner, vmconfig.purge_groupid)
+    
+def wf_escalations():
+    libvmintgr.printd('starting escalation workflow...')
+    libvmintgr.escalate_vulns(vmconfig.escdir)
     
 def wf_reptest():
     libvmintgr.site_extraction(scanner)
@@ -118,12 +123,13 @@ def domain():
     sitesyncmode = False
     grouplistmode = False
     purgemode = False
+    escmode = False
     selection = False
     vulnproc = False
     reptest = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDf:GhRSsVt')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhRSsVt')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -145,6 +151,9 @@ def domain():
             libvmintgr.setdebugging(True)
         elif o == '-D':
             purgemode = True
+            selection = True
+        elif o == '-e':
+            escmode = True
             selection = True
         elif o == '-G':
             grouplistmode = True
@@ -203,6 +212,8 @@ def domain():
         wf_vuln_proc()
     elif reptest:
         wf_reptest()
+    elif escmode:
+        wf_escalations()
 
 if __name__ == '__main__':
     domain()

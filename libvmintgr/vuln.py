@@ -5,6 +5,7 @@ from netaddr import *
 
 import debug
 import sql
+import vmjson
 
 vulnautolist = []
 uidcache = []
@@ -37,6 +38,17 @@ class VulnAutoEntry(object):
 
         return -1
 
+class WorkflowElement(object):
+    STATUS_NONE = 0
+    STATUS_ESCALATED = 1
+
+    def __init__(self):
+        self.workflow_id = None
+        self.vulnerability = None
+        self.lasthandled = None
+        self.contact = None
+        self.status = None
+
 class vulnerability(object):
     def __init__(self):
         self.sitename = None
@@ -51,6 +63,8 @@ class vulnerability(object):
         self.cvss = None
         self.rhsa = None
         self.vid = None
+        self.known_exploits = None
+        self.known_malware = None
 
     def __str__(self):
         buf = '----- %d %s | %s | %s\n' \
@@ -69,6 +83,21 @@ def vuln_reset_uid_cache():
 
 def expire_hosts():
     dbconn.expire_hosts(uidcache)
+
+def escalate_vulns(escdir):
+    ret = dbconn.asset_list()
+    debug.printd('processing %d assets' % len(ret))
+
+    for i in ret:
+        wfes = dbconn.get_workflow(i)
+
+        for w in wfes:
+            # Only escalate things that haven't been handled yet
+            if w.status != WorkflowElement.STATUS_NONE:
+                continue
+
+            # Create JSON event from the element
+            jv = vmjson.wf_to_json(w)
 
 def asset_unique_id(address, mac, hostname, aid):
     if mac == '':
