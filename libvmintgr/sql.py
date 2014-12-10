@@ -55,6 +55,12 @@ class VMIntDB(object):
             status INTEGER,
             FOREIGN KEY(vid) REFERENCES assetvulns(id))''')
 
+        c.execute('''CREATE TABLE IF NOT EXISTS compliance
+            (id INTEGER PRIMARY KEY, aid INTEGER,
+            lastscore INTEGER, link TEXT,
+            lastupdated INTEGER,
+            FOREIGN KEY (aid) REFERENCES assets(id))''')
+
         c.execute('''CREATE TABLE IF NOT EXISTS cves
             (id INTEGER PRIMARY KEY, vid INTEGER, cve TEXT,
             UNIQUE (vid, cve),
@@ -138,6 +144,7 @@ class VMIntDB(object):
         c.execute('''DELETE FROM workflow WHERE vid IN
             (SELECT id FROM assetvulns WHERE aid = %d)''' % assetid)
         c.execute('''DELETE FROM assetvulns WHERE aid = %d''' % assetid)
+        c.execute('''DELETE FROM compliance WHERE aid = %d''' % assetid)
         c.execute('''DELETE FROM assets WHERE id = %d''' % assetid)
         self._conn.commit()
 
@@ -204,8 +211,12 @@ class VMIntDB(object):
         if len(rows) == 0:
             c.execute('''INSERT INTO assets VALUES (NULL, "%s", %d,
                 "%s", "%s", "%s")''' % (uid, aid, address, hostname, mac))
+            ret = c.lastrowid
+            # We also want a compliance tracking item for each asset
+            c.execute('''INSERT INTO compliance VALUES (NULL, %d, 0,
+                NULL, 0)''' % ret)
             self._conn.commit()
-            return c.lastrowid
+            return ret
         else:
             return rows[0][0]
 
