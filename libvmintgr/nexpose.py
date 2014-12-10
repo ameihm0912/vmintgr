@@ -246,6 +246,12 @@ def vuln_extraction(scanner):
         v.hostname = i[3]
         v.macaddr = i[4]
         v.title = i[5]
+        v.known_exploits = False
+        v.known_malware = False
+        if int(i[13]) > 0:
+            v.known_exploits = True
+        if int(i[14]) > 0:
+            v.known_malware = True
         v.vid = i[15]
         idx = i[7].find('.')
         if idx > 0:

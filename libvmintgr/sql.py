@@ -38,6 +38,7 @@ class VMIntDB(object):
         c.execute('''CREATE TABLE IF NOT EXISTS vulns
             (id INTEGER PRIMARY KEY, nxvid INTEGER,
             title TEXT, cvss REAL,
+            known_exploits INTEGER, known_malware INTEGER,
             UNIQUE(nxvid))''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS assetvulns
@@ -99,10 +100,18 @@ class VMIntDB(object):
         c = self._conn.cursor()
         exists = False
         ret = None
+        mwf = 0
+        exf = 0
+
+        if v.known_exploits:
+            exf = 1
+        if v.known_malware:
+            mwf = 1
 
         try:
             c.execute('''INSERT INTO vulns VALUES (NULL,
-                %s, "%s", %f)''' % (v.vid, v.title, v.cvss))
+                %s, "%s", %f, %d, %d)''' % (v.vid, v.title,
+                v.cvss, exf, mwf))
         except sqlite3.IntegrityError:
             exists = True
  
