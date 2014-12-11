@@ -16,13 +16,14 @@ fi
 infile=$1
 outdir=$2
 
+upout=`mktemp`
 outfile="znmss-`date +%s`.out"
 out="${outdir}/${outfile}"
 
 zmapscan() {
 	port=$1
 
-	zmap -i ${interface} -p $port -w $infile -o ${out}.${port}
+	zmap -i ${interface} -p $port -w $upout -o ${out}.${port}
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
@@ -30,7 +31,8 @@ zmapscan() {
 
 zmapscan_icmp() {
 	zmap -i ${interface} --probe-module=icmp_echoscan -w $infile \
-		-o ${out}.up
+		-o ${upout}
+	cp ${upout} ${out}.up
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
@@ -43,7 +45,7 @@ for i in $plist; do
 	zmapscan $i
 done
 
-cd $2
+cd $outdir
 rm -f lastscan*
 for i in `ls ${outfile}.* | grep '\.[[:digit:]]\+$'`; do
 	pn=`echo $i | cut -d '.' -f 3`
@@ -52,5 +54,7 @@ done
 if [ -f ${outfile}.up ]; then
 	ln -s ${outfile}.up lastscan.up
 fi
+
+rm -f $upout
 
 exit 0
