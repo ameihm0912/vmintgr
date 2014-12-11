@@ -22,14 +22,14 @@ out="${outdir}/${outfile}"
 zmapscan() {
 	port=$1
 
-	zmap -i ${interface} -p $port -w $infile -o ${out}.${port}
+	zmap -i ${interface} -p $port -P 2 -w $infile -o ${out}.${port}
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
 }
 
 zmapscan_icmp() {
-	zmap -i ${interface} --probe-module=icmp_echoscan -w $infile \
+	zmap -i ${interface} --probe-module=icmp_echoscan -P 2 -w $infile \
 		-o ${out}.up
 	if [ $? -ne 0 ]; then
 		exit 1
