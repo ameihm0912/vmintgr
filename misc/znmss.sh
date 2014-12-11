@@ -18,9 +18,12 @@ outdir=$2
 
 outfile="znmss-`date +%s`.out"
 out="${outdir}/${outfile}"
+sleeptime=90
 
 zmapscan() {
 	port=$1
+
+	sleep $sleeptime
 
 	zmap -i ${interface} -p $port -P 5 -w $infile -o ${out}.${port}
 	if [ $? -ne 0 ]; then
