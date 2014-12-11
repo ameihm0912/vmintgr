@@ -11,6 +11,22 @@ vulnautolist = []
 uidcache = []
 dbconn = None
 
+# XXX This should probably be in a configuration file
+class ComplianceLevels(object):
+    LEVELS = {
+        # 2 days
+        'maximum': (60 * 60 * 48),
+        # 2 weeks
+        'high': (60 * 60 * 24 * 14),
+        # 3 months
+        'medium': (60 * 60 * 24 * 90)
+    }
+    FLOOR = {
+        'maximum': 9.0,
+        'high': 7.0,
+        'medium': 5.0
+    }
+
 class VulnAutoEntry(object):
     def __init__(self, name):
         self.name = name
@@ -59,6 +75,7 @@ class vulnerability(object):
         self.title = None
         self.discovered_date = None
         self.discovered_date_unix = None
+        self.age_days = None
         self.cves = None
         self.cvss = None
         self.rhsa = None
@@ -112,6 +129,10 @@ def asset_unique_id(address, mac, hostname, aid):
     debug.printd('using identifier %s' % ret)
     return ret
 
+def calculate_compliance(uid):
+    debug.printd('calculating compliance for %s' % uid)
+    ret = dbconn.compliance_values(uid)
+
 def vuln_auto_finder(address, mac, hostname):
     cand = None
     last = -1
@@ -158,6 +179,9 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
         else:
             debug.printd('skipping vulnerability %s as it does not meet ' \
                 'minimum cvss score' % v.vid)
+
+    # Calculate the compliance score for the asset
+    calculate_compliance(uid)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn

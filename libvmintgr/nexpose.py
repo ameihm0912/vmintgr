@@ -154,6 +154,7 @@ def reptest(scanner):
         return
 
     ret = scanner.conn.adhoc_report(squery, sites)
+    print ret
     sys.exit(0)
 
 def add_asset_properties(scanner):
@@ -193,6 +194,41 @@ def add_asset_properties(scanner):
             a['hostname'] = atable[a['id']][2]
             a['macaddress'] = atable[a['id']][3]
 
+def vuln_age_days(v, agedata):
+    k = '%s:%s' % (v.assetid, v.vid)
+    return agedata[k]
+
+def vuln_get_age_data(scanner):
+    squery = '''
+    SELECT asset_id, vulnerability_id, age_in_days FROM
+    fact_asset_vulnerability_age
+    '''
+
+    ret = {}
+
+    debug.printd('requesting vulnerability age information')
+
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    vulndata = scanner.conn.adhoc_report(squery, sites)
+    reader = csv.reader(StringIO.StringIO(vulndata))
+    for i in reader:
+        if len(i) == 0:
+            continue
+        if i[0] == 'asset_id':
+            continue
+        k = '%s:%s' % (i[0], i[1])
+        age = float(i[2])
+
+        if k in ret.keys():
+            if age > ret[k]:
+                ret[k] = age
+        else:
+            ret[k] = age
+    return ret
+
 def vuln_extraction(scanner):
     squery = '''
     WITH 
@@ -229,6 +265,8 @@ def vuln_extraction(scanner):
     if len(sites) == 0:
         return
 
+    agedata = vuln_get_age_data(scanner)
+
     vulndata = scanner.conn.adhoc_report(squery, sites)
     reader = csv.reader(StringIO.StringIO(vulndata))
     nvulns = 0
@@ -258,6 +296,7 @@ def vuln_extraction(scanner):
             dstr = i[7][:idx]
         else:
             dstr = i[7]
+        v.age_days = vuln_age_days(v, agedata)
         dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
         dt = dt.replace(tzinfo=pytz.UTC)
         v.discovered_date = dt

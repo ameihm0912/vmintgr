@@ -98,6 +98,9 @@ class VMIntDB(object):
         c.execute('''SELECT id FROM assets''')
         return c.fetchall()
 
+    def compliance_values(self, uid):
+        c = self._conn.cursor()
+
     def get_workflow(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, workflow.id AS wid,
