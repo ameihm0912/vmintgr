@@ -22,7 +22,7 @@ out="${outdir}/${outfile}"
 zmapscan() {
 	port=$1
 
-	zmap -i ${interface} -p $port -P 2 -w $infile -o ${out}.${port}
+	zmap -i ${interface} -p $port -P 5 -w $infile -o ${out}.${port}
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
