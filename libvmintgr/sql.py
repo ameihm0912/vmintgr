@@ -101,6 +101,13 @@ class VMIntDB(object):
     def compliance_values(self, uid):
         c = self._conn.cursor()
 
+    def workflow_handled(self, wfid, flag):
+        c = self._conn.cursor()
+        c.execute('''UPDATE workflow SET status = %d, lasthandled = %d
+            WHERE id = %d''' % (flag, 
+            int(calendar.timegm(time.gmtime())), wfid))
+        self._conn.commit()
+
     def get_workflow(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, workflow.id AS wid,
@@ -206,6 +213,23 @@ class VMIntDB(object):
             c.execute('''UPDATE assetvulns SET detected = %d WHERE
                 id = %d''' % (v.discovered_date_unix, rows[0][0]))
         self._conn.commit()
+
+    def resolve_vulnerability(self, vidlist, dbassetid):
+        c = self._conn.cursor()
+
+        c.execute('''SELECT vulns.nxvid, assetvulns.id FROM vulns
+            JOIN assetvulns ON vulns.id = assetvulns.vid WHERE
+            assetvulns.aid = %d''' % dbassetid)
+        rows = c.fetchall()
+
+        for i in rows:
+            if i[0] not in vidlist:
+                continue
+            # We previously knew about the vulnerability on the device
+            # and it's not there anymore, mark it as resolved
+            c.execute('''UPDATE workflow SET status = %d
+                WHERE vid = %d''' % (vuln.WorkflowElement.STATUS_RESOLVED,
+                i[1]))
 
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()

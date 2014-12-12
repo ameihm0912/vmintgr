@@ -20,6 +20,12 @@ def wf_to_json(w):
     ret['asset']['macaddr'] = w.vulnerability.macaddr
 
     ret['vuln'] = {}
+    if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
+        ret['vuln']['status'] = 'new'
+    elif w.status == vuln.WorkflowElement.STATUS_CLOSED:
+        ret['vuln']['status'] = 'closed'
+    else:
+        ret['vuln']['status'] = 'unknown'
     ret['vuln']['title'] = w.vulnerability.title
     ret['vuln']['cvss'] = w.vulnerability.cvss
     ret['vuln']['exploits'] = w.vulnerability.known_exploits

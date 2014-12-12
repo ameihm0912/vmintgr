@@ -1,6 +1,9 @@
 import sys
 import os
+import calendar
+import time
 import ConfigParser
+import cPickle
 from netaddr import *
 
 import debug
@@ -15,11 +18,11 @@ dbconn = None
 class ComplianceLevels(object):
     LEVELS = {
         # 2 days
-        'maximum': (60 * 60 * 48),
+        'maximum': 2.0,
         # 2 weeks
-        'high': (60 * 60 * 24 * 14),
+        'high': 14.0,
         # 3 months
-        'medium': (60 * 60 * 24 * 90)
+        'medium': 90.0
     }
     FLOOR = {
         'maximum': 9.0,
@@ -57,6 +60,8 @@ class VulnAutoEntry(object):
 class WorkflowElement(object):
     STATUS_NONE = 0
     STATUS_ESCALATED = 1
+    STATUS_RESOLVED = 2
+    STATUS_CLOSED = 3
 
     def __init__(self):
         self.workflow_id = None
@@ -104,17 +109,41 @@ def expire_hosts():
 def escalate_vulns(escdir):
     ret = dbconn.asset_list()
     debug.printd('processing %d assets' % len(ret))
+    vlist = []
 
     for i in ret:
         wfes = dbconn.get_workflow(i)
 
         for w in wfes:
             # Only escalate things that haven't been handled yet
-            if w.status != WorkflowElement.STATUS_NONE:
+            if w.status != WorkflowElement.STATUS_NONE and \
+                w.status != WorkflowElement.STATUS_RESOLVED:
                 continue
+
+            if w.status == WorkflowElement.STATUS_NONE:
+                w.status = WorkflowElement.STATUS_ESCALATED
+            elif w.status == WorkflowElement.STATUS_RESOLVED:
+                w.status = WorkflowElement.STATUS_CLOSED
 
             # Create JSON event from the element
             jv = vmjson.wf_to_json(w)
+            vlist.append(jv)
+
+            # Mark this workflow element as handled now
+            dbconn.workflow_handled(w.workflow_id, w.status)
+
+    if len(vlist) > 0:
+        write_vuln_escalations(vlist, escdir)
+
+def write_vuln_escalations(vlist, escdir):
+    fname = 'vulns-%d-%d.dat' % (int(calendar.timegm(time.gmtime())),
+        os.getpid())
+    outfile = os.path.join(escdir, fname)
+    debug.printd('writing vulnerabilities escalations to %s' % outfile)
+
+    fd = open(outfile, 'w')
+    cPickle.dump(vlist, fd)
+    fd.close()
 
 def asset_unique_id(address, mac, hostname, aid):
     if mac == '':
@@ -151,6 +180,7 @@ def vuln_auto_finder(address, mac, hostname):
 
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache
+    vidcache = []
 
     debug.printd('vulnerability process pipeline for asset id %d' % aid)
     vauto = vuln_auto_finder(address, mac, hostname)
@@ -171,6 +201,7 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     debug.printd('using db asset %d' % dbassetid)
 
     for v in vlist:
+        vidcache.append(v.vid)
         # We don't want to look at everything, query the handlers minimum
         # CVSS value to see if we should proceed
         if v.cvss >= vauto.mincvss:
@@ -179,6 +210,8 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
         else:
             debug.printd('skipping vulnerability %s as it does not meet ' \
                 'minimum cvss score' % v.vid)
+
+    dbconn.resolve_vulnerability(vidcache, dbassetid)
 
     # Calculate the compliance score for the asset
     calculate_compliance(uid)
