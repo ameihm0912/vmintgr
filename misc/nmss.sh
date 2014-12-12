@@ -14,7 +14,7 @@ tmpfile=`mktemp`
 outfile="nmss-`date +%s`.out"
 out="${2}/${outfile}"
 
-nmap -iL $1 -sS -p $3 -PE -T4 -oG $tmpfile
+nmap -iL $1 -sS -p $3 -P0 -oG $tmpfile
 
 while read ln; do
 	echo $ln | grep -q 'Status: Up'
