@@ -139,11 +139,13 @@ def write_vuln_escalations(vlist, escdir):
     fname = 'vulns-%d-%d.dat' % (int(calendar.timegm(time.gmtime())),
         os.getpid())
     outfile = os.path.join(escdir, fname)
+    tmpoutfile = outfile + '.tmp'
     debug.printd('writing vulnerabilities escalations to %s' % outfile)
 
-    fd = open(outfile, 'w')
+    fd = open(tmpoutfile, 'w')
     cPickle.dump(vlist, fd)
     fd.close()
+    os.rename(tmpoutfile, outfile)
 
 def asset_unique_id(address, mac, hostname, aid):
     if mac == '':
