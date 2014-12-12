@@ -37,7 +37,7 @@ def wf_to_json(w):
 def ce_to_json(w):
     ret = {}
 
-    ret['target'] = w.failvuln.hostname
+    ret['hostname'] = w.failvuln.hostname
     
     ret['policy'] = {}
     ret['policy']['url'] = ''
