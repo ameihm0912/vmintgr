@@ -16,19 +16,19 @@ dbconn = None
 
 # XXX This should probably be in a configuration file
 class ComplianceLevels(object):
-    ORDERING = ('maximum', 'high', 'medium')
+    ORDERING = ('maximum', 'high', 'mediumlow')
     LEVELS = {
         # 2 days
-        'maximum': 2.0,
+        'maximum': 1.0,
         # 2 weeks
-        'high': 14.0,
+        'high': 7.0,
         # 3 months
-        'medium': 90.0
+        'mediumlow': 30.0
     }
     FLOOR = {
         'maximum': 9.0,
         'high': 7.0,
-        'medium': 5.0
+        'mediumlow': 5.0
     }
 
 class VulnAutoEntry(object):
