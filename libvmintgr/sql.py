@@ -223,7 +223,7 @@ class VMIntDB(object):
         rows = c.fetchall()
 
         for i in rows:
-            if i[0] not in vidlist:
+            if i[0] in vidlist:
                 continue
             # We previously knew about the vulnerability on the device
             # and it's not there anymore, mark it as resolved
