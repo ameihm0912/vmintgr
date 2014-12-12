@@ -195,8 +195,7 @@ def add_asset_properties(scanner):
             a['macaddress'] = atable[a['id']][3]
 
 def vuln_age_days(v, agedata):
-    k = '%s:%s' % (v.assetid, v.vid)
-    return agedata[k]
+    return agedata[v.assetid][int(v.vid)]
 
 def vuln_get_age_data(scanner):
     squery = '''
@@ -219,14 +218,16 @@ def vuln_get_age_data(scanner):
             continue
         if i[0] == 'asset_id':
             continue
-        k = '%s:%s' % (i[0], i[1])
+        assetid = int(i[0])
+        vid = int(i[1])
         age = float(i[2])
-
-        if k in ret:
-            if age > ret[k]:
-                ret[k] = age
+        if assetid not in ret:
+            ret[assetid] = {}
+        if vid not in ret[assetid]:
+            ret[assetid][vid] = age
         else:
-            ret[k] = age
+            if age > ret[assetid][vid]:
+                ret[assetid][vid] = age
     return ret
 
 def vuln_extraction(scanner, vulnquery_where):

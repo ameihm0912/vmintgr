@@ -44,7 +44,7 @@ class VMIntDB(object):
 
         c.execute('''CREATE TABLE IF NOT EXISTS assetvulns
             (id INTEGER PRIMARY KEY, aid INTEGER, vid INTEGER,
-            detected INTEGER,
+            detected INTEGER, age REAL,
             UNIQUE (aid, vid),
             FOREIGN KEY(aid) REFERENCES assets(id),
             FOREIGN KEY(vid) REFERENCES vulns(id))''')
@@ -57,8 +57,8 @@ class VMIntDB(object):
 
         c.execute('''CREATE TABLE IF NOT EXISTS compliance
             (id INTEGER PRIMARY KEY, aid INTEGER,
-            lastscore INTEGER, link TEXT,
-            lastupdated INTEGER,
+            failed INTEGER, link TEXT,
+            lastupdated INTEGER, failingvid INTEGER,
             FOREIGN KEY (aid) REFERENCES assets(id))''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS cves
@@ -98,8 +98,35 @@ class VMIntDB(object):
         c.execute('''SELECT id FROM assets''')
         return c.fetchall()
 
+    def compliance_update(self, uid, failflag, failvid):
+        c = self._conn.cursor()
+
+        failed = 0
+        if failflag:
+            failed = 1 
+        if failvid == None:
+            fvid = 0
+        else:
+            fvid = failvid
+        c.execute('''UPDATE compliance SET failed = %d,
+            lastupdated = %d, failingvid = %d
+            WHERE aid IN (SELECT id FROM assets WHERE uid = "%s")''' % \
+            (failed, int(calendar.timegm(time.gmtime())), fvid, uid))
+        self._conn.commit()
+
     def compliance_values(self, uid):
         c = self._conn.cursor()
+
+        # Return a list to the calculator which is as follows:
+        #
+        # ((assetvulns:id, cvss, age(days)), ...)
+        c = self._conn.cursor()
+        c.execute('''SELECT assetvulns.id, vulns.cvss, assetvulns.age
+            FROM assetvulns JOIN vulns ON assetvulns.vid = vulns.id
+            JOIN assets ON assetvulns.aid = assets.id
+            WHERE assets.uid = "%s"''' % uid)
+        rows = c.fetchall()
+        return rows
 
     def workflow_handled(self, wfid, flag):
         c = self._conn.cursor()
@@ -204,14 +231,15 @@ class VMIntDB(object):
             # This is a new issue for this asset
             vulnrow = self.add_vuln_master(v)
             c.execute('''INSERT INTO assetvulns VALUES (NULL, %d,
-                %s, %d)''' % (dbassetid, vulnrow,
-                v.discovered_date_unix))
+                %s, %d, %f)''' % (dbassetid, vulnrow,
+                v.discovered_date_unix, v.age_days))
             entrow = c.lastrowid
             c.execute('''INSERT INTO workflow VALUES (NULL, %s,
                 0, %d, 0)''' % (entrow, int(calendar.timegm(time.gmtime()))))
         else:
-            c.execute('''UPDATE assetvulns SET detected = %d WHERE
-                id = %d''' % (v.discovered_date_unix, rows[0][0]))
+            c.execute('''UPDATE assetvulns SET detected = %d,
+                age = %f WHERE
+                id = %d''' % (v.discovered_date_unix, v.age_days, rows[0][0]))
         self._conn.commit()
 
     def resolve_vulnerability(self, vidlist, dbassetid):
@@ -241,7 +269,7 @@ class VMIntDB(object):
             ret = c.lastrowid
             # We also want a compliance tracking item for each asset
             c.execute('''INSERT INTO compliance VALUES (NULL, %d, 0,
-                NULL, 0)''' % ret)
+                NULL, 0, 0)''' % ret)
             self._conn.commit()
             return ret
         else:

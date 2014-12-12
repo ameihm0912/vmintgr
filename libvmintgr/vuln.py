@@ -16,6 +16,7 @@ dbconn = None
 
 # XXX This should probably be in a configuration file
 class ComplianceLevels(object):
+    ORDERING = ('maximum', 'high', 'medium')
     LEVELS = {
         # 2 days
         'maximum': 2.0,
@@ -163,6 +164,33 @@ def asset_unique_id(address, mac, hostname, aid):
 def calculate_compliance(uid):
     debug.printd('calculating compliance for %s' % uid)
     ret = dbconn.compliance_values(uid)
+
+    failvid = None
+    failage = 0
+    max_cvss = 0
+    for level in ComplianceLevels.ORDERING:
+        for val in ret:
+            vid = val[0]
+            cvss = val[1]
+            age = val[2]
+            if cvss >= ComplianceLevels.FLOOR[level] and \
+                age > ComplianceLevels.LEVELS[level]:
+                # Compliance failure, note the vulnerability that caused the
+                # failure that has the highest CVSS base score
+                if failvid == None or max_cvss < cvss:
+                    failvid = vid
+                    max_cvss = cvss
+                    failage = age
+        if failvid != None:
+            break
+
+    failflag = False
+    if failvid != None:
+        debug.printd('asset fails compliance due to vid %d '
+            '(cvss=%f, age=%d)' % (failvid, max_cvss, failage))
+        failflag = True
+
+    dbconn.compliance_update(uid, failflag, failvid)
 
 def vuln_auto_finder(address, mac, hostname):
     cand = None
