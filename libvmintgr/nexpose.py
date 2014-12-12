@@ -153,7 +153,7 @@ def reptest(scanner):
     if len(sites) == 0:
         return
 
-    ret = scanner.conn.adhoc_report(squery, sites)
+    ret = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
     print ret
     sys.exit(0)
 
@@ -174,7 +174,8 @@ def add_asset_properties(scanner):
     if len(sites) == 0:
         return
 
-    vulndata = scanner.conn.adhoc_report(squery, sites)
+    vulndata = scanner.conn.adhoc_report(squery, sites,
+        api_version='1.3.2')
 
     reader = csv.reader(StringIO.StringIO(vulndata))
     atable = {}
@@ -211,7 +212,7 @@ def vuln_get_age_data(scanner):
     if len(sites) == 0:
         return
 
-    vulndata = scanner.conn.adhoc_report(squery, sites)
+    vulndata = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
     reader = csv.reader(StringIO.StringIO(vulndata))
     for i in reader:
         if len(i) == 0:
@@ -269,7 +270,7 @@ def vuln_extraction(scanner, vulnquery_where):
 
     agedata = vuln_get_age_data(scanner)
 
-    vulndata = scanner.conn.adhoc_report(squery, sites)
+    vulndata = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
     reader = csv.reader(StringIO.StringIO(vulndata))
     nvulns = 0
     linked = 0
