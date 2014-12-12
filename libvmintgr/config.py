@@ -13,6 +13,8 @@ class VMConfig(object):
         self.pidfile = None
         self.sql_path = None
 
+        self.vulnquery_where = ''
+
         self.exempt_dir = None
 
         self.vulnauto_dir = None
@@ -46,6 +48,8 @@ class VMConfig(object):
                 mdesc = 'vulnauto'
             elif s == 'autopurge':
                 mdesc = 'autopurge'
+            elif s == 'debug':
+                mdesc = 'debug'
             else:
                 sys.stderr.write('invalid configuration section %s\n' % \
                     s)
@@ -59,6 +63,14 @@ class VMConfig(object):
             self.vulnauto_dir = v
         elif k == 'escalations':
             self.escdir = v
+        else:
+            sys.stderr.write('option %s not available under %s\n' % \
+                (k, s))
+            sys.exit(1)
+
+    def parse_debug(self, k, v, s):
+        if k == 'vulnquery_where':
+            self.vulnquery_where = v
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

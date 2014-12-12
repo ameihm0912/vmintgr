@@ -229,7 +229,7 @@ def vuln_get_age_data(scanner):
             ret[k] = age
     return ret
 
-def vuln_extraction(scanner):
+def vuln_extraction(scanner, vulnquery_where):
     squery = '''
     WITH 
     vuln_references AS ( 
@@ -256,8 +256,9 @@ def vuln_extraction(scanner):
     JOIN dim_protocol dp USING (protocol_id) 
     JOIN dim_service dsvc USING (service_id) 
     JOIN vuln_references vr USING (vulnerability_id) 
+    %s
     ORDER BY ds.name, da.ip_address
-    '''
+    ''' % vulnquery_where
 
     debug.printd('requesting vulnerability details')
 

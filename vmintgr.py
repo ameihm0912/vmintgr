@@ -94,7 +94,7 @@ def wf_vuln_proc():
     libvmintgr.printd('executing vulnerability processing automation...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
-    libvmintgr.vuln_extraction(scanner)
+    libvmintgr.vuln_extraction(scanner, vmconfig.vulnquery_where)
 
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)
