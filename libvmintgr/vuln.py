@@ -71,6 +71,13 @@ class WorkflowElement(object):
         self.contact = None
         self.status = None
 
+class ComplianceElement(object):
+    def __init__(self):
+        self.compliance_id = None
+        self.failed = None
+        self.lasthandled = None
+        self.failvuln = None
+
 class vulnerability(object):
     def __init__(self):
         self.sitename = None
@@ -135,6 +142,31 @@ def escalate_vulns(escdir):
 
     if len(vlist) > 0:
         write_vuln_escalations(vlist, escdir)
+
+    clist = []
+    # Do the same thing for compliance items
+    for i in ret:
+        ce = dbconn.get_compliance(i)
+        if ce == None:
+            continue
+
+        jc = vmjson.ce_to_json(ce)
+        clist.append(jc)
+
+    if len(clist) > 0:
+        write_compliance_escalations(clist, escdir)
+
+def write_compliance_escalations(clist, escdir):
+    fname = 'compliance-%d-%d.dat' % (int(calendar.timegm(time.gmtime())),
+        os.getpid())
+    outfile = os.path.join(escdir, fname)
+    tmpoutfile = outfile + '.tmp'
+    debug.printd('writing compliance escalations to %s' % outfile)
+
+    fd = open(tmpoutfile, 'w')
+    cPickle.dump(clist, fd)
+    fd.close()
+    os.rename(tmpoutfile, outfile)
 
 def write_vuln_escalations(vlist, escdir):
     fname = 'vulns-%d-%d.dat' % (int(calendar.timegm(time.gmtime())),

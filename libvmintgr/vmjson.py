@@ -33,3 +33,30 @@ def wf_to_json(w):
     ret['vuln']['discovery_time'] = w.vulnerability.discovered_date_unix
 
     return json.dumps(ret)
+
+def ce_to_json(w):
+    ret = {}
+
+    ret['target'] = w.failvuln.hostname
+    
+    ret['policy'] = {}
+    ret['policy']['url'] = ''
+    ret['policy']['name'] = 'system'
+    ret['policy']['level'] = 'medium'
+
+    ret['check'] = {}
+    ret['check']['name'] = 'vulnerability scanner check'
+    ret['check']['description'] = 'validate system patch level'
+    ret['check']['location'] = 'endpoint'
+    ret['check']['ref'] = 'sysmediumupdates1'
+    ret['check']['test'] = {}
+    ret['check']['test']['name'] = 'vulnerability scan'
+    ret['check']['test']['value'] = w.failvuln.title
+
+    ret['compliance'] = False
+    ret['link'] = ''
+    # XXX This needs to be converted to the correct format
+    ret['utctimestamp'] = w.lasthandled
+
+    return json.dumps(ret)
+

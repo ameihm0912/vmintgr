@@ -3,6 +3,7 @@ import datetime
 import pytz
 import calendar
 import time
+import sys
 
 import vuln
 import debug
@@ -94,9 +95,13 @@ class VMIntDB(object):
                 self.remove_asset(i[0])
     
     def asset_list(self):
+        ret = []
         c = self._conn.cursor()
         c.execute('''SELECT id FROM assets''')
-        return c.fetchall()
+        rows = c.fetchall()
+        for i in rows:
+            ret.append(i[0])
+        return ret
 
     def compliance_update(self, uid, failflag, failvid):
         c = self._conn.cursor()
@@ -135,6 +140,47 @@ class VMIntDB(object):
             int(calendar.timegm(time.gmtime())), wfid))
         self._conn.commit()
 
+    def get_compliance(self, aid):
+        c = self._conn.cursor()
+        c.execute('''SELECT assets.id, compliance.id AS cid,
+            assets.ip, assets.hostname, assets.mac,
+            compliance.lastupdated, compliance.failed,
+            vulns.nxvid, vulns.title, vulns.cvss,
+            assetvulns.age
+            FROM assets
+            JOIN compliance ON assets.id = compliance.aid
+            JOIN assetvulns ON (compliance.failingvid = assetvulns.id
+            AND assets.id = assetvulns.aid)
+            JOIN vulns ON (assetvulns.vid = vulns.id)
+            WHERE assets.id = %d''' % aid)
+        rows = c.fetchall()
+
+        if len(rows) == 0:
+            return None
+        i = rows[0]
+
+        ce = vuln.ComplianceElement()
+
+        ce.compliance_id = i['cid']
+        if i['failed'] == 1:
+            ce.failed = True
+        else:
+            ce.failed = False
+        ce.lasthandled = i['lastupdated']
+
+        v = vuln.vulnerability()
+        v.assetid = aid
+        v.ipaddr = i['ip'].encode('ascii', errors='ignore')
+        v.macaddr = i['mac'].encode('ascii', errors='ignore')
+        v.hostname = i['hostname'].encode('ascii', errors='ignore')
+        v.vid = i['nxvid']
+        v.age_days = i['age']
+        v.title = i['title'].encode('ascii', errors='ignore')
+        v.cvss = i['cvss']
+        ce.failvuln = v
+
+        return ce
+
     def get_workflow(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, workflow.id AS wid,
@@ -147,7 +193,7 @@ class VMIntDB(object):
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
             JOIN workflow ON assetvulns.id = workflow.vid
-            WHERE assets.id = aid''')
+            WHERE assets.id = %d''' % aid)
         rows = c.fetchall()
 
         ret = []
