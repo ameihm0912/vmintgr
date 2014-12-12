@@ -222,7 +222,7 @@ def vuln_get_age_data(scanner):
         k = '%s:%s' % (i[0], i[1])
         age = float(i[2])
 
-        if k in ret.keys():
+        if k in ret:
             if age > ret[k]:
                 ret[k] = age
         else:
