@@ -152,7 +152,6 @@ def escalate_vulns(escdir):
 
         if ce == None:
             target = dbconn.aid_to_host(i)
-            print target
         else:
             target = ce.failvuln.hostname
 
