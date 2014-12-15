@@ -193,10 +193,10 @@ class VMIntDB(object):
     def get_workflow(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, workflow.id AS wid,
-            assets.ip, assets.hostname,
+            assets.ip, assets.hostname, vulns.id AS vid,
             assets.mac, vulns.nxvid, vulns.title, vulns.cvss,
             vulns.known_exploits, vulns.known_malware,
-            assetvulns.detected,
+            assetvulns.detected, assetvulns.age,
             workflow.lasthandled, workflow.contact, workflow.status
             FROM assetvulns
             JOIN assets ON assets.id = assetvulns.aid
@@ -220,9 +220,25 @@ class VMIntDB(object):
             v.macaddr = i['mac'].encode('ascii', errors='ignore')
             v.hostname = i['hostname'].encode('ascii', errors='ignore')
             v.vid = i['nxvid']
+            rowvid = i['vid']
             v.discovered_date_unix = i['detected']
             v.title = i['title'].encode('ascii', errors='ignore')
             v.cvss = i['cvss']
+            v.known_malware = False
+            v.known_exploits = False
+            if i['known_malware'] != 0:
+                v.known_malware = True
+            if i['known_exploits'] != 0:
+                v.known_exploits = True
+            v.age_days = i['age']
+
+            # Supplement the element with associated CVEs
+            c.execute('''SELECT cve FROM cves
+                WHERE vid = %d''' % rowvid)
+            rows2 = c.fetchall()
+            v.cves = []
+            for j in rows2:
+                v.cves.append(j[0].encode('ascii', errors='ignore'))
 
             wfe.vulnerability = v
 

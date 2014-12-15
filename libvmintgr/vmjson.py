@@ -19,9 +19,8 @@ def set_compliance_urls(u1, u2):
 def wf_to_json(w):
     ret = {}
 
-    ret['check'] = {}
-    ret['check']['description'] = DEFDESC
-    ret['check']['timestamp'] = int(calendar.timegm(time.gmtime()))
+    ret['description'] = DEFDESC
+    ret['utctimestamp'] = int(calendar.timegm(time.gmtime()))
 
     ret['asset'] = {}
     ret['asset']['ipv4'] = w.vulnerability.ipaddr
@@ -40,6 +39,10 @@ def wf_to_json(w):
     ret['vuln']['exploits'] = w.vulnerability.known_exploits
     ret['vuln']['malware'] = w.vulnerability.known_malware
     ret['vuln']['discovery_time'] = w.vulnerability.discovered_date_unix
+    ret['vuln']['age_days'] = w.vulnerability.age_days
+    ret['vuln']['cves'] = []
+    for i in w.vulnerability.cves:
+        ret['vuln']['cves'].append(i)
 
     return json.dumps(ret)
 
