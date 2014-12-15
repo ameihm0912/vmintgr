@@ -12,6 +12,7 @@ class VMConfig(object):
         self.vms_port = 0
         self.pidfile = None
         self.sql_path = None
+        self.mozdef_url = None
 
         self.vulnquery_where = ''
 
@@ -118,6 +119,8 @@ class VMConfig(object):
             self.pidfile = v
         elif k == 'sqldb':
             self.sql_path = v
+        elif k == 'mozdef':
+            self.mozdef_url = v
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

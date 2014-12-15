@@ -18,7 +18,7 @@ pidfd = None
 vmdbconn = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadDeGhRSs] [-f path]\n' \
+    sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-f path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
@@ -28,6 +28,7 @@ def usage():
         '\t-f path\t\tPath to configuration file\n' \
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
+        '\t-m\t\tDequeue events to MozDef\n' \
         '\t-R\t\tStored report list\n' \
         '\t-S\t\tSite list\n' \
         '\t-s\t\tSite sync\n' \
@@ -58,6 +59,10 @@ def wf_escalations():
     libvmintgr.printd('starting escalation workflow...')
     libvmintgr.escalate_vulns(vmconfig.escdir)
     
+def wf_mozdef():
+    libvmintgr.printd('dequeueing events to mozdef...')
+    libvmintgr.mozdef_proc(vmconfig.escdir, vmconfig.mozdef_url)
+
 def wf_reptest():
     libvmintgr.site_extraction(scanner)
     libvmintgr.reptest(scanner)
@@ -127,9 +132,10 @@ def domain():
     selection = False
     vulnproc = False
     reptest = False
+    mozdefmode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhRSsVt')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhmRSsVt')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -157,6 +163,9 @@ def domain():
             selection = True
         elif o == '-G':
             grouplistmode = True
+            selection = True
+        elif o == '-m':
+            mozdefmode = True
             selection = True
         elif o == '-S':
             sitelistmode = True
@@ -214,6 +223,8 @@ def domain():
         wf_reptest()
     elif escmode:
         wf_escalations()
+    elif mozdefmode:
+        wf_mozdef()
 
 if __name__ == '__main__':
     domain()
