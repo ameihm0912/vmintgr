@@ -140,6 +140,15 @@ class VMIntDB(object):
             int(calendar.timegm(time.gmtime())), wfid))
         self._conn.commit()
 
+    def aid_to_host(self, aid):
+        c = self._conn.cursor()
+        c.execute('''SELECT hostname FROM assets WHERE id = %d''' % aid)
+        rows = c.fetchall()
+        if len(rows) == 0:
+            return None
+        else:
+            return rows[0][0]
+
     def get_compliance(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, compliance.id AS cid,

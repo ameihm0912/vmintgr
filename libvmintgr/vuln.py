@@ -147,10 +147,16 @@ def escalate_vulns(escdir):
     # Do the same thing for compliance items
     for i in ret:
         ce = dbconn.get_compliance(i)
-        if ce == None:
-            continue
+        # get_compliance returning None means the system passed compliance
+        # checks, we still want to create an event though.
 
-        jc = vmjson.ce_to_json(ce)
+        if ce == None:
+            target = dbconn.aid_to_host(i)
+            print target
+        else:
+            target = ce.failvuln.hostname
+
+        jc = vmjson.ce_to_json(ce, target)
         clist.append(jc)
 
     if len(clist) > 0:

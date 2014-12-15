@@ -187,6 +187,8 @@ def domain():
         sys.exit(1)
 
     vmconfig = libvmintgr.VMConfig(confpath)
+    libvmintgr.set_compliance_urls(vmconfig.compliance_url,
+        vmconfig.compliance_link)
 
     open_pidfile()
 

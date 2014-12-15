@@ -13,6 +13,8 @@ class VMConfig(object):
         self.pidfile = None
         self.sql_path = None
         self.mozdef_url = None
+        self.compliance_url = None
+        self.compliance_link = None
 
         self.vulnquery_where = ''
 
@@ -121,6 +123,10 @@ class VMConfig(object):
             self.sql_path = v
         elif k == 'mozdef':
             self.mozdef_url = v
+        elif k == 'compliance_url':
+            self.compliance_url = v
+        elif k == 'compliance_link':
+            self.compliance_link = v
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

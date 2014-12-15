@@ -7,6 +7,15 @@ import vuln
 
 DEFDESC = "system vulnerability management automation"
 
+compliance_url = 'unset'
+compliance_link = 'unset'
+
+def set_compliance_urls(u1, u2):
+    global compliance_url
+    global compliance_link
+    compliance_url = u1
+    compliance_link = u2
+
 def wf_to_json(w):
     ret = {}
 
@@ -34,13 +43,13 @@ def wf_to_json(w):
 
     return json.dumps(ret)
 
-def ce_to_json(w):
+def ce_to_json(w, target):
     ret = {}
 
-    ret['hostname'] = w.failvuln.hostname
+    ret['target'] = target
     
     ret['policy'] = {}
-    ret['policy']['url'] = ''
+    ret['policy']['url'] = compliance_url
     ret['policy']['name'] = 'system'
     ret['policy']['level'] = 'medium'
 
@@ -51,12 +60,14 @@ def ce_to_json(w):
     ret['check']['ref'] = 'sysmediumupdates1'
     ret['check']['test'] = {}
     ret['check']['test']['name'] = 'vulnerability scan'
-    ret['check']['test']['value'] = w.failvuln.title
+    ret['check']['test']['value'] = 'nexpose'
 
-    ret['compliance'] = False
-    ret['link'] = ''
-    # XXX This needs to be converted to the correct format
-    ret['utctimestamp'] = w.lasthandled
+    if w == None:
+        ret['compliance'] = True
+    else:
+        ret['compliance'] = False
+    ret['utctimestamp'] = int(calendar.timegm(time.gmtime()))
+    ret['link'] = compliance_link
 
     return json.dumps(ret)
 
