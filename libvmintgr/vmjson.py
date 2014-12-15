@@ -2,6 +2,8 @@ import sys
 import json
 import calendar
 import time
+import pytz
+import datetime
 
 import vuln
 
@@ -20,7 +22,8 @@ def wf_to_json(w):
     ret = {}
 
     ret['description'] = DEFDESC
-    ret['utctimestamp'] = int(calendar.timegm(time.gmtime()))
+    ret['utctimestamp'] = \
+        pytz.timezone('UTC').localize(datetime.datetime.utcnow()).isoformat()
 
     ret['asset'] = {}
     ret['asset']['ipv4'] = w.vulnerability.ipaddr
@@ -69,7 +72,8 @@ def ce_to_json(w, target):
         ret['compliance'] = True
     else:
         ret['compliance'] = False
-    ret['utctimestamp'] = int(calendar.timegm(time.gmtime()))
+    ret['utctimestamp'] = \
+        pytz.timezone('UTC').localize(datetime.datetime.utcnow()).isoformat()
     ret['link'] = compliance_link
 
     return json.dumps(ret)
