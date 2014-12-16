@@ -196,7 +196,16 @@ def add_asset_properties(scanner):
             a['macaddress'] = atable[a['id']][3]
 
 def vuln_age_days(v, agedata):
-    return agedata[v.assetid][int(v.vid)]
+    # It's possible here that if the -r flag was used as the source for
+    # vulnerabilities, and things were added to the file, we might not have
+    # age data for the issue since that still comes from the server.
+    #
+    # In this case, return an age of 10 days.
+    try:
+        ret = agedata[v.assetid][int(v.vid)]
+    except KeyError:
+        return 10.0
+    return ret
 
 def vuln_get_age_data(scanner):
     squery = '''
@@ -231,7 +240,7 @@ def vuln_get_age_data(scanner):
                 ret[assetid][vid] = age
     return ret
 
-def vuln_extraction(scanner, vulnquery_where):
+def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None):
     squery = '''
     WITH 
     vuln_references AS ( 
@@ -270,7 +279,21 @@ def vuln_extraction(scanner, vulnquery_where):
 
     agedata = vuln_get_age_data(scanner)
 
-    vulndata = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
+    if readfile != None:
+        debug.printd('reading vulnerability data from %s' % readfile)
+        fd = open(readfile, 'r')
+        vulndata = fd.read()
+        fd.close()
+    else:
+        vulndata = scanner.conn.adhoc_report(squery, sites,
+            api_version='1.3.2')
+
+    if writefile != None:
+        fd = open(writefile, 'w')
+        fd.write(vulndata)
+        fd.close()
+        sys.exit(0)
+
     reader = csv.reader(StringIO.StringIO(vulndata))
     nvulns = 0
     linked = 0

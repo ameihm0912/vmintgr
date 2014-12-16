@@ -17,8 +17,13 @@ scanner = None
 pidfd = None
 vmdbconn = None
 
+# Used for -w and -r
+vulns_readfile = None
+vulns_writefile = None
+
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-f path]\n' \
+    sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-f path] [-r path]' \
+        ' [-w path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
@@ -29,11 +34,13 @@ def usage():
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
         '\t-m\t\tDequeue events to MozDef\n' \
+        '\t-r path\t\tWith -V, read vulnerabilities from file\n' \
         '\t-R\t\tStored report list\n' \
         '\t-S\t\tSite list\n' \
         '\t-s\t\tSite sync\n' \
         '\t-t\t\tReport test\n' \
-        '\t-V\t\tProcess vulnerabilities from source\n')
+        '\t-V\t\tProcess vulnerabilities from source\n' \
+        '\t-w path\t\tWith -V, just write vulnerabilities to file\n')
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
@@ -99,7 +106,8 @@ def wf_vuln_proc():
     libvmintgr.printd('executing vulnerability processing automation...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
-    libvmintgr.vuln_extraction(scanner, vmconfig.vulnquery_where)
+    libvmintgr.vuln_extraction(scanner, vmconfig.vulnquery_where,
+        writefile=vulns_writefile, readfile=vulns_readfile)
 
 def wf_list_reports():
     reports = libvmintgr.report_list(scanner)
@@ -120,6 +128,8 @@ def domain():
     global debug
     global scanner
     global vmdbconn
+    global vulns_readfile
+    global vulns_writefile
     confpath = None
     replistmode = False
     authfailmode = False
@@ -135,7 +145,7 @@ def domain():
     mozdefmode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhmRSsVt')
+        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhmRr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -153,6 +163,8 @@ def domain():
         elif o == '-R':
             replistmode = True
             selection = True
+        elif o == '-r':
+            vulns_readfile = a
         elif o == '-d':
             libvmintgr.setdebugging(True)
         elif o == '-D':
@@ -179,6 +191,8 @@ def domain():
         elif o == '-V':
             vulnproc = True
             selection = True
+        elif o == '-w':
+            vulns_writefile = a
         elif o == '-f':
             confpath = a
 
