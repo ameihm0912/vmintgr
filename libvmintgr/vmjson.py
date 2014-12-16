@@ -26,9 +26,9 @@ def wf_to_json(w):
         pytz.timezone('UTC').localize(datetime.datetime.utcnow()).isoformat()
 
     ret['asset'] = {}
-    ret['asset']['ipv4'] = w.vulnerability.ipaddr
+    ret['asset']['ipv4address'] = w.vulnerability.ipaddr
     ret['asset']['hostname'] = w.vulnerability.hostname
-    ret['asset']['macaddr'] = w.vulnerability.macaddr
+    ret['asset']['macaddress'] = w.vulnerability.macaddr
 
     ret['vuln'] = {}
     if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
@@ -39,8 +39,8 @@ def wf_to_json(w):
         ret['vuln']['status'] = 'unknown'
     ret['vuln']['title'] = w.vulnerability.title
     ret['vuln']['cvss'] = w.vulnerability.cvss
-    ret['vuln']['exploits'] = w.vulnerability.known_exploits
-    ret['vuln']['malware'] = w.vulnerability.known_malware
+    ret['vuln']['known_exploits'] = w.vulnerability.known_exploits
+    ret['vuln']['known_malware'] = w.vulnerability.known_malware
     ret['vuln']['discovery_time'] = w.vulnerability.discovered_date_unix
     ret['vuln']['age_days'] = w.vulnerability.age_days
     ret['vuln']['cves'] = []
