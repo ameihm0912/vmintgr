@@ -308,9 +308,6 @@ class VMIntDB(object):
             WHERE vulns.nxvid = %s AND assetvulns.aid = %d''' % \
             (v.vid, dbassetid))
         rows = c.fetchall()
-        # XXX If the issue doesn't exist add it, maybe we should also
-        # update the discovery value if it already existed and the current
-        # value does not match the value in v.discovered_date_unix
         if len(rows) == 0:
             # This is a new issue for this asset
             vulnrow = self.add_vuln_master(v)
