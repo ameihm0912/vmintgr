@@ -22,6 +22,8 @@ class VMConfig(object):
 
         self.vulnauto_dir = None
         self.escdir = None
+        self.escalate_vulns = False
+        self.escalate_compliance = False
 
         self.purge_groupid = None
 
@@ -66,6 +68,16 @@ class VMConfig(object):
             self.vulnauto_dir = v
         elif k == 'escalations':
             self.escdir = v
+        elif k == 'escalate_vulns':
+            if v == '1':
+                self.escalate_vulns = True
+            else:
+                self.escalate_vulns = False
+        elif k == 'escalate_compliance':
+            if v == '1':
+                self.escalate_compliance = True
+            else:
+                self.escalate_compliance = False
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))

@@ -114,7 +114,7 @@ def vuln_reset_uid_cache():
 def expire_hosts():
     dbconn.expire_hosts(uidcache)
 
-def escalate_vulns(escdir):
+def escalate_vulns(escdir, escalate_vulns, escalate_compliance):
     ret = dbconn.asset_list()
     debug.printd('processing %d assets' % len(ret))
     vlist = []
@@ -141,7 +141,8 @@ def escalate_vulns(escdir):
             dbconn.workflow_handled(w.workflow_id, w.status)
 
     if len(vlist) > 0:
-        write_vuln_escalations(vlist, escdir)
+        if escalate_vulns:
+            write_vuln_escalations(vlist, escdir)
 
     clist = []
     # Do the same thing for compliance items
@@ -159,7 +160,8 @@ def escalate_vulns(escdir):
         clist.append(jc)
 
     if len(clist) > 0:
-        write_compliance_escalations(clist, escdir)
+        if escalate_compliance:
+            write_compliance_escalations(clist, escdir)
 
 def write_compliance_escalations(clist, escdir):
     fname = 'compliance-%d-%d.dat' % (int(calendar.timegm(time.gmtime())),
