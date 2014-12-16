@@ -4,6 +4,10 @@ import sys
 import getopt
 import fcntl
 import os
+import shutil
+import calendar
+import time
+import errno
 
 sys.path.append('../pnexpose')
 
@@ -118,6 +122,35 @@ def wf_list_reports():
             reports[repent]['last-generated'],
             reports[repent]['status']))
 
+def dbbackup(path):
+    nfiles = 5
+    y = ['.' + str(x) for x in range(nfiles)]
+    bfiles = [path + x for x in y]
+    if not os.path.isfile(bfiles[0]):
+        shutil.copyfile(path, bfiles[0])
+        return
+    m0 = os.path.getmtime(bfiles[0])
+    now = calendar.timegm(time.gmtime())
+    if (now - m0) < float(vmconfig.dbbackup):
+        return
+    libvmintgr.debug.printd('doing database backup')
+    try:
+        os.remove(bfiles[-1])
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            pass
+        else:
+            raise
+    for i in reversed(bfiles[:-1]):
+        try:
+            os.rename(i, bfiles[bfiles.index(i) + 1])
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                pass
+            else:
+                raise
+    shutil.copyfile(path, bfiles[0])
+
 def open_pidfile():
     global pidfd
     pidfd = open(vmconfig.pidfile, 'w')
@@ -207,6 +240,7 @@ def domain():
 
     open_pidfile()
 
+    dbbackup(vmconfig.sql_path)
     vmdbconn = libvmintgr.db_init(vmconfig.sql_path)
     vmdbconn.create()
     libvmintgr.load_exemptions(vmconfig.exempt_dir)

@@ -15,6 +15,7 @@ class VMConfig(object):
         self.mozdef_url = None
         self.compliance_url = None
         self.compliance_link = None
+        self.dbbackup = 28800
 
         self.vulnquery_where = ''
 
@@ -135,6 +136,8 @@ class VMConfig(object):
             self.sql_path = v
         elif k == 'mozdef':
             self.mozdef_url = v
+        elif k == 'dbbackup':
+            self.dbbackup = v
         elif k == 'compliance_url':
             self.compliance_url = v
         elif k == 'compliance_link':
