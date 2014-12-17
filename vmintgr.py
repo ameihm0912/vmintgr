@@ -127,7 +127,11 @@ def dbbackup(path):
     y = ['.' + str(x) for x in range(nfiles)]
     bfiles = [path + x for x in y]
     if not os.path.isfile(bfiles[0]):
-        shutil.copyfile(path, bfiles[0])
+        try:
+            shutil.copyfile(path, bfiles[0])
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
         return
     m0 = os.path.getmtime(bfiles[0])
     now = calendar.timegm(time.gmtime())
@@ -149,7 +153,11 @@ def dbbackup(path):
                 pass
             else:
                 raise
-    shutil.copyfile(path, bfiles[0])
+    try:
+        shutil.copyfile(path, bfiles[0])
+    except IOError as e:
+        if e.errno != errno.ENOENT:
+            raise
 
 def open_pidfile():
     global pidfd

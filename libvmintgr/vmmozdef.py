@@ -3,7 +3,7 @@ import os
 import cPickle
 import json
 
-import mozdef
+import mozdef_client as mozdef
 
 def mozdef_proc(escdir, mozdef_url):
     escfiles = os.listdir(escdir)
@@ -19,15 +19,15 @@ def mozdef_proc(escdir, mozdef_url):
         if 'vulns' in i:
             summary = 'vmintgr-vulnerability'
             tags = ['vmintgr', 'vulnerability']
+            msg = mozdef.MozDefMsg(mozdef_url, summary, tags)
+            msg.fire_and_forget_mode = False
+            for j in events:
+                d = json.loads(j)
+                msg.send_event(summary, tags, details=d)
         elif 'compliance' in i:
-            summary = 'vmintgr-compliance'
-            tags = ['vmintgr', 'compliance']
-        else:
-            continue
-
-        msg = mozdef.MozDefMsg(mozdef_url, summary=summary,
-            tags=tags)
-        msg.fire_and_forget_mode = False
-        for j in events:
-            d = json.loads(j)
-            msg.send(details=d)
+            msg = mozdef.MozDefMsg(mozdef_url)
+            msg.fire_and_forget_mode = False
+            for j in events:
+                d = json.loads(j)
+                msg.send_compliance(d['target'], d['policy'],
+                    d['check'], d['compliance'], d['link'])

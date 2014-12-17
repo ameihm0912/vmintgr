@@ -66,6 +66,7 @@ def ce_to_json(w, target):
     ret['check']['ref'] = 'sysmediumupdates1'
     ret['check']['test'] = {}
     ret['check']['test']['name'] = 'vulnerability scan'
+    ret['check']['test']['type'] = 'nexpose'
     ret['check']['test']['value'] = 'nexpose'
 
     if w == None:
