@@ -73,7 +73,8 @@ def wf_escalations():
     
 def wf_mozdef():
     libvmintgr.printd('dequeueing events to mozdef...')
-    libvmintgr.mozdef_proc(vmconfig.escdir, vmconfig.mozdef_url)
+    libvmintgr.mozdef_proc(vmconfig.escdir,
+        vmconfig.mozdef_compliance_url, vmconfig.mozdef_vuln_url)
 
 def wf_reptest():
     libvmintgr.site_extraction(scanner)

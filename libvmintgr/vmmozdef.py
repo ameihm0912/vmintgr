@@ -5,7 +5,7 @@ import json
 
 import mozdef_client as mozdef
 
-def mozdef_proc(escdir, mozdef_url):
+def mozdef_proc(escdir, mozdef_compliance_url, mozdef_vuln_url):
     escfiles = os.listdir(escdir)
 
     escfiles = sorted(escfiles, key=lambda x: x.split('-')[1])
@@ -19,13 +19,13 @@ def mozdef_proc(escdir, mozdef_url):
         if 'vulns' in i:
             summary = 'vmintgr-vulnerability'
             tags = ['vmintgr', 'vulnerability']
-            msg = mozdef.MozDefMsg(mozdef_url, summary, tags)
+            msg = mozdef.MozDefMsg(mozdef_vuln_url, summary, tags)
             msg.fire_and_forget_mode = False
             for j in events:
                 d = json.loads(j)
                 msg.send_event(summary, tags, details=d)
         elif 'compliance' in i:
-            msg = mozdef.MozDefMsg(mozdef_url)
+            msg = mozdef.MozDefMsg(mozdef_compliance_url)
             msg.fire_and_forget_mode = False
             for j in events:
                 d = json.loads(j)

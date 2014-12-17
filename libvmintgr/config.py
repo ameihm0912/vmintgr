@@ -12,7 +12,8 @@ class VMConfig(object):
         self.vms_port = 0
         self.pidfile = None
         self.sql_path = None
-        self.mozdef_url = None
+        self.mozdef_compliance_url = None
+        self.mozdef_vuln_url = None
         self.compliance_url = None
         self.compliance_link = None
         self.dbbackup = 28800
@@ -134,8 +135,10 @@ class VMConfig(object):
             self.pidfile = v
         elif k == 'sqldb':
             self.sql_path = v
-        elif k == 'mozdef':
-            self.mozdef_url = v
+        elif k == 'mozdef_compliance':
+            self.mozdef_compliance_url = v
+        elif k == 'mozdef_vuln':
+            self.mozdef_vuln_url = v
         elif k == 'dbbackup':
             self.dbbackup = v
         elif k == 'compliance_url':
