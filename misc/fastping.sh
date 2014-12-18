@@ -3,6 +3,8 @@
 # hostfile - List of subnets or addresses which to scan for
 # outpath - Path to store output
 
+umask 022
+
 if [ -z "$2" ]; then
 	echo usage: nmss.sh hostfile outpath
 	exit 1
@@ -13,7 +15,7 @@ tmpfile=`mktemp`
 outfile="fastping-`date +%s`.out"
 out="${2}/${outfile}"
 
-nmap -sn -PE -T5 -oG $tmpfile -n --min-rate 500 -iL $1
+nmap -sn -PE -T5 -oG $tmpfile -n --min-rate 500 --privileged -iL $1
 if [ $? -ne 0 ]; then exit 1; fi
 
 while read ln; do

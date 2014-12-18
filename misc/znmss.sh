@@ -9,6 +9,8 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 interface=eth1
 
+umask 022
+
 if [ -z "$3" ]; then
 	echo "usage: znmss.sh hostfile outpath port icmp_only(0|1)"
 	exit 1

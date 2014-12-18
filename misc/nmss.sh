@@ -4,6 +4,8 @@
 # outpath - Path to store output
 # port - Port(s) to scan for, comma seperated no spaces
 
+umask 022
+
 if [ -z "$3" ]; then
 	echo usage: nmss.sh hostfile outpath port
 	exit 1
@@ -14,7 +16,7 @@ tmpfile=`mktemp`
 outfile="nmss-`date +%s`.out"
 out="${2}/${outfile}"
 
-nmap -iL $1 -sS -p $3 -P0 -oG $tmpfile
+nmap -iL $1 -sS -p $3 -P0 --privileged -oG $tmpfile
 
 while read ln; do
 	echo $ln | grep -q 'Status: Up'
