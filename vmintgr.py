@@ -93,7 +93,7 @@ def wf_site_sync():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
     for i in vmconfig.devsync_map.keys():
-        libvmintgr.site_update_from_file(scanner, i, vmconfig.devsync_map[i])
+        libvmintgr.site_update_from_files(scanner, i, vmconfig.devsync_map[i])
 
 def wf_device_auth_fail():
     libvmintgr.printd('executing device authentication failure workflow...')

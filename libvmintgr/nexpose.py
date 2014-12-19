@@ -1,10 +1,12 @@
 import sys
+import os
 import xml.etree.ElementTree as ET
 import StringIO
 import csv
 import time
 import datetime
 import pytz
+import tempfile
 import urllib
 import urllib2
 import cookielib
@@ -400,6 +402,17 @@ def group_purge(scanner, gid):
         scanner.conn.device_delete(i)
         debug.printd('removed device %s' % i)
 
+def site_update_from_files(scanner, sid, pathlist):
+    tmpfile = tempfile.mkstemp()
+    tmpfilefd = os.fdopen(tmpfile[0], 'w')
+    for i in pathlist:
+        fd = open(i, 'r')
+        tmpfilefd.write(fd.read())
+        fd.close()
+    tmpfilefd.close()
+    site_update_from_file(scanner, sid, tmpfile[1])
+    os.remove(tmpfile[1])
+    
 def site_update_from_file(scanner, sid, path):
     debug.printd('updating site %s from %s' % (sid, path))
     sconf = scanner.conn.site_config(sid)

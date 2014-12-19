@@ -110,7 +110,7 @@ class VMConfig(object):
             sys.exit(1)
 
     def parse_device_sync(self, k, v, s):
-        self.devsync_map[k] = v
+        self.devsync_map[k] = v.split()
 
     def parse_device_authfail(self, k, v, s):
         if k == 'repid':
