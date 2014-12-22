@@ -8,6 +8,7 @@ import shutil
 import calendar
 import time
 import errno
+import traceback
 
 sys.path.append('../pnexpose')
 
@@ -296,7 +297,14 @@ def domain():
     elif mozdefmode:
         wf_mozdef()
 
+def wrapmain():
+    try:
+        domain()
+    except:
+        libvmintgr.printd(traceback.format_exc())
+        sys.exit(1)
+
 if __name__ == '__main__':
-    domain()
+    wrapmain()
 
 sys.exit(0)
