@@ -12,6 +12,7 @@ class VMConfig(object):
         self.vms_port = 0
         self.pidfile = None
         self.sql_path = None
+        self.logfile = None
         self.mozdef_compliance_url = None
         self.mozdef_vuln_url = None
         self.compliance_url = None
@@ -141,6 +142,8 @@ class VMConfig(object):
             self.mozdef_vuln_url = v
         elif k == 'dbbackup':
             self.dbbackup = v
+        elif k == 'logfile':
+            self.logfile = v
         elif k == 'compliance_url':
             self.compliance_url = v
         elif k == 'compliance_link':

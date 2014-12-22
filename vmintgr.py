@@ -15,6 +15,7 @@ import libvmintgr
 
 import pnexpose
 
+logfd = None
 vmconfig = None
 debug = False
 scanner = None
@@ -45,6 +46,14 @@ def usage():
         '\t-t\t\tReport test\n' \
         '\t-V\t\tProcess vulnerabilities from source\n' \
         '\t-w path\t\tWith -V, just write vulnerabilities to file\n')
+
+def logfile_write(s):
+    logfd.write('[%s] %s\n' % (time.asctime(time.localtime()), s))
+
+def logfile_init(path):
+    global logfd
+    logfd = open(path, 'a')
+    libvmintgr.debug.register_hook(logfile_write)
 
 def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
@@ -244,6 +253,7 @@ def domain():
         sys.exit(1)
 
     vmconfig = libvmintgr.VMConfig(confpath)
+    logfile_init(vmconfig.logfile)
     libvmintgr.set_compliance_urls(vmconfig.compliance_url,
         vmconfig.compliance_link)
 
