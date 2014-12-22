@@ -406,7 +406,12 @@ def site_update_from_files(scanner, sid, pathlist):
     tmpfile = tempfile.mkstemp()
     tmpfilefd = os.fdopen(tmpfile[0], 'w')
     for i in pathlist:
-        fd = open(i, 'r')
+        try:
+            fd = open(i, 'r')
+        except IOError:
+            debug.printd('cannot read %s, skipping site' % i)
+            os.remove(tmpfile[1])
+            return
         tmpfilefd.write(fd.read())
         fd.close()
     tmpfilefd.close()
