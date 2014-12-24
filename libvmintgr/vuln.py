@@ -4,6 +4,7 @@ import calendar
 import time
 import ConfigParser
 import cPickle
+import re
 from netaddr import *
 
 import debug
@@ -34,16 +35,28 @@ class ComplianceLevels(object):
 class VulnAutoEntry(object):
     def __init__(self, name):
         self.name = name
+        self.title = None
+        self.description = None
         self.mincvss = None
 
         self._match_ip = None
         self._match_net = None
+        self._match_name = []
 
     def add_match(self, val):
         if '/' in val:
             self._match_net = IPNetwork(val)
         else:
             self._match_ip = IPAddress(val)
+
+    def add_namematch(self, val):
+        self._match_name.append(re.compile(val))
+
+    def name_test(self, hostname):
+        for i in self._match_name:
+            if i.match(hostname):
+                return True
+        return False
 
     def ip_test(self, ipstr):
         ip = IPAddress(ipstr)
@@ -53,8 +66,9 @@ class VulnAutoEntry(object):
             if self._match_ip == ip:
                 return 32
 
-        if ip in self._match_net:
-            return self._match_net.netmask.bits().count('1')
+        if self._match_net != None:
+            if ip in self._match_net:
+                return self._match_net.netmask.bits().count('1')
 
         return -1
 
@@ -235,6 +249,13 @@ def vuln_auto_finder(address, mac, hostname):
     cand = None
     last = -1
     for va in vulnautolist:
+        # Prioritize matching on hostname by default, if we match here just
+        # stop looking
+        if va.name_test(hostname):
+            cand = va
+            last = 100
+            break
+
         ret = va.ip_test(address)
         if ret == -1:
             continue
@@ -305,11 +326,16 @@ def load_vulnauto_list(path):
             if k == 'mincvss':
                 n.mincvss = float(v)
                 pass
-            elif k == 'match':
-                n.add_match(v)
-            elif k == 'matchon':
-                # Unused right now
-                pass
+            elif k == 'ipmatch':
+                if v != '':
+                    n.add_match(v)
+            elif k == 'namematch':
+                if v != '':
+                    n.add_namematch(v)
+            elif k == 'name':
+                n.title = v
+            elif k == 'description':
+                n.description = v
             else:
                 sys.stderr.write('vulnauto option %s not available under ' \
                     '%s\n' % (k, s))

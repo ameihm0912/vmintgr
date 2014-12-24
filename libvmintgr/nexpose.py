@@ -522,6 +522,44 @@ def report_list(scanner):
         ret[newrep['id']] = newrep
     return ret
 
+def asset_grouping(scanner):
+    # Each automation entry that was loaded will result in an asset group
+    groupdata = {}
+    for x in vuln.vulnautolist:
+        groupdata[x.name] = {}
+        groupdata[x.name]['autoentry'] = x
+        groupdata[x.name]['assetids'] = []
+    for s in scanner.sitelist:
+        for a in scanner.sitelist[s]['assets']:
+            vent = vuln.vuln_auto_finder(a['address'], a['macaddress'],
+                a['hostname'])
+            if vent == None:
+                continue
+            for i in groupdata:
+                if groupdata[i]['autoentry'] == vent:
+                    groupdata[i]['assetids'].append(a['id'])
+
+    for x in groupdata:
+        usegroup = -1
+        vgent = groupdata[x]['autoentry']
+        # See if we are updating an existing group or creating a new one
+        for g in scanner.grouplist:
+            if scanner.grouplist[g]['name'] == vgent.title:
+                usegroup = int(scanner.grouplist[g]['id'])
+        if usegroup == -1:
+            debug.printd('creating a new asset group')
+        else:
+            debug.printd('updating asset group %d' % usegroup)
+
+        e = ET.Element('AssetGroup', attrib={'id': str(usegroup),
+            'name': vgent.title, 'description': vgent.description})
+        de = ET.SubElement(e, 'Devices')
+        for i in groupdata[x]['assetids']:
+            newsub = ET.SubElement(de, 'device',
+                attrib={'id': str(i)})
+        scanner.conn.asset_group_save((ET.tostring(e),))
+        
+
 def asset_extraction(scanner):
     for sid in scanner.sitelist.keys():
         debug.printd('requesting devices for site %s (%s)' % \

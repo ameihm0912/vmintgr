@@ -60,6 +60,7 @@ def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
+    libvmintgr.asset_grouping(scanner)
 
 def wf_group_list():
     libvmintgr.printd('starting asset group list workflow...')
