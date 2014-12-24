@@ -301,6 +301,8 @@ def domain():
 def wrapmain():
     try:
         domain()
+    except SystemExit:
+        pass
     except:
         libvmintgr.printd(traceback.format_exc())
         sys.exit(1)
