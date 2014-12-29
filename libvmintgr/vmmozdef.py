@@ -31,3 +31,5 @@ def mozdef_proc(escdir, mozdef_compliance_url, mozdef_vuln_url):
                 d = json.loads(j)
                 msg.send_compliance(d['target'], d['policy'],
                     d['check'], d['compliance'], d['link'])
+
+        os.remove(p)
