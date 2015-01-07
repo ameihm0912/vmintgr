@@ -242,7 +242,8 @@ def vuln_get_age_data(scanner):
                 ret[assetid][vid] = age
     return ret
 
-def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None):
+def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
+    targetcve=None):
     squery = '''
     WITH 
     vuln_references AS ( 
@@ -356,9 +357,18 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None):
         for a in scanner.sitelist[s]['assets']:
             if len(a['vulns']) == 0:
                 continue
+            # If in target CVE report mode, just report on the CVE but
+            # don't actually process the vulnerability
+            if targetcve != None:
+                vuln.vuln_cvereport(a, targetcve)
+                continue
             vuln.vuln_proc_pipeline(a['vulns'],
                 a['id'], a['address'], a['macaddress'],
                 a['hostname'])
+
+    if targetcve != None:
+        return
+
     vuln.expire_hosts()
 
 def vuln_instance_link(v, scanner):

@@ -28,11 +28,12 @@ vulns_readfile = None
 vulns_writefile = None
 
 def usage():
-    sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-f path] [-r path]' \
-        ' [-w path]\n' \
+    sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-c regex] [-f path] ' \
+        '[-r path] [-w path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
+        '\t-c regex\tReport hosts vulnerable to CVE\n' \
         '\t-d\t\tDebug mode\n' \
         '\t-D\t\tDevice auto-purge\n' \
         '\t-e\t\tEscalation pass against database\n' \
@@ -61,6 +62,14 @@ def wf_asset_grouping():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
     libvmintgr.asset_grouping(scanner)
+
+def wf_cvemode(targetcve):
+    libvmintgr.printd('starting cve report workflow...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    libvmintgr.vuln_extraction(scanner, vmconfig.vulnquery_where,
+        writefile=vulns_writefile, readfile=vulns_readfile,
+        targetcve=targetcve)
 
 def wf_group_list():
     libvmintgr.printd('starting asset group list workflow...')
@@ -197,9 +206,10 @@ def domain():
     vulnproc = False
     reptest = False
     mozdefmode = False
+    cvemode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'AadDef:GhmRr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aac:dDef:GhmRr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -214,6 +224,10 @@ def domain():
         elif o == '-A':
             agroupmode = True
             selection = True
+        elif o == '-c':
+            cvemode = True
+            selection = True
+            targetcve = a
         elif o == '-R':
             replistmode = True
             selection = True
@@ -297,6 +311,8 @@ def domain():
         wf_escalations()
     elif mozdefmode:
         wf_mozdef()
+    elif cvemode:
+        wf_cvemode(targetcve)
 
 def wrapmain():
     try:

@@ -268,6 +268,29 @@ def vuln_auto_finder(address, mac, hostname):
         debug.printd('unable to match automation handler')
     return cand
 
+def vuln_cvereport(asset, targetcve):
+    addr = asset['address']
+    mac = asset['macaddress']
+    hostname = asset['hostname']
+
+    if hostname == '':
+        hostname = 'unknown'
+
+    for v in asset['vulns']:
+        if v.cves == None:
+            continue
+        match = False
+        matchcve = None
+        for c in v.cves:
+            if re.match(targetcve, c) != None:
+                match = True
+                matchcve = c
+                break
+        if not match:
+            continue
+        sys.stdout.write('%s %s %s %s %s\n' % \
+            (hostname, addr, mac, c, v.title))
+
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache
     vidcache = []
