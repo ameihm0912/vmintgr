@@ -40,7 +40,7 @@ def main():
     fd.close()
     for i in grps:
         cnt = len(grps[i])
-        fname = os.path.join(sys.argv[2], i.replace(' ', '_') + '.conf')
+        fname = os.path.join(sys.argv[2], i.replace(' ', '_'))
         sys.stdout.write('writing %s - %d assets\n' % (fname, cnt))
         fd = open(fname, 'w')
         for j in grps[i]:
