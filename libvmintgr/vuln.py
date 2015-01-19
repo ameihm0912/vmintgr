@@ -10,6 +10,7 @@ from netaddr import *
 import debug
 import sql
 import vmjson
+import fuzzy
 
 vulnautolist = []
 uidcache = []
@@ -245,7 +246,7 @@ def calculate_compliance(uid):
 
     dbconn.compliance_update(uid, failflag, failvid)
 
-def vuln_auto_finder(address, mac, hostname):
+def vuln_auto_finder(address, mac, hostname, fuzzhints=None):
     cand = None
     last = -1
     for va in vulnautolist:
@@ -263,10 +264,17 @@ def vuln_auto_finder(address, mac, hostname):
             cand = va
             last = ret
     if cand != None:
+        if fuzzhints != None:
+            if hostname != None and hostname != "":
+                debug.printd('no match, attempting fuzzy match')
+                ret = vuln_fuzzhost_auto_finder(hostname, fuzzhints)
         debug.printd('using VulnAutoEntry %s (score: %d)' % (cand.name, last))
     else:
         debug.printd('unable to match automation handler')
     return cand
+
+def vuln_fuzzhost_auto_finder(hostname, fuzzhints):
+    matchgrp, best = fuzzy.fuzzy_match_host(hostname, fuzzhints)
 
 def vuln_cvereport(asset, targetcve):
     addr = asset['address']
