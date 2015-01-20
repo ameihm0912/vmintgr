@@ -33,6 +33,7 @@ def usage():
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
+        '\t-b\t\tAsset dump to stdout\n' \
         '\t-c regex\tReport hosts vulnerable to CVE\n' \
         '\t-d\t\tDebug mode\n' \
         '\t-D\t\tDevice auto-purge\n' \
@@ -63,6 +64,20 @@ def wf_asset_grouping():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
     libvmintgr.asset_grouping(scanner, fuzzhints=vmconfig.fuzzyhints)
+
+def wf_asset_dump():
+    libvmintgr.printd('starting asset dump workflow...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    for s in scanner.sitelist:
+        sys.stdout.write('# %s\n' % scanner.sitelist[s]['name'])
+        for a in scanner.sitelist[s]['assets']:
+            sys.stdout.write('%s ' % a['address'])
+            hname = a['hostname']
+            if hname == None or hname == '':
+                sys.stdout.write('unknown\n')
+            else:
+                sys.stdout.write('%s\n' % hname)
 
 def wf_cvemode(targetcve):
     libvmintgr.printd('starting cve report workflow...')
@@ -198,6 +213,7 @@ def domain():
     replistmode = False
     authfailmode = False
     agroupmode = False
+    adumpmode = False
     sitelistmode = False
     sitesyncmode = False
     grouplistmode = False
@@ -211,7 +227,7 @@ def domain():
     fuzzyhints = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aac:dDef:F:GhmRr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:F:GhmRr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -225,6 +241,9 @@ def domain():
             selection = True
         elif o == '-A':
             agroupmode = True
+            selection = True
+        elif o == '-b':
+            adumpmode = True
             selection = True
         elif o == '-c':
             cvemode = True
@@ -304,6 +323,8 @@ def domain():
         wf_auto_purge()
     elif agroupmode:
         wf_asset_grouping()
+    elif adumpmode:
+        wf_asset_dump()
     elif grouplistmode:
         wf_group_list()
     elif sitelistmode:
