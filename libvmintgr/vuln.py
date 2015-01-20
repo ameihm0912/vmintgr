@@ -10,7 +10,6 @@ from netaddr import *
 import debug
 import sql
 import vmjson
-import fuzzy
 
 vulnautolist = []
 uidcache = []

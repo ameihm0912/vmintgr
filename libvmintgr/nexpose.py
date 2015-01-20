@@ -532,7 +532,7 @@ def report_list(scanner):
         ret[newrep['id']] = newrep
     return ret
 
-def asset_grouping(scanner, fuzzhints=None):
+def asset_grouping(scanner):
     # Each automation entry that was loaded will result in an asset group
     groupdata = {}
     for x in vuln.vulnautolist:
@@ -542,7 +542,7 @@ def asset_grouping(scanner, fuzzhints=None):
     for s in scanner.sitelist:
         for a in scanner.sitelist[s]['assets']:
             vent = vuln.vuln_auto_finder(a['address'], a['macaddress'],
-                a['hostname'], fuzzhints=fuzzhints)
+                a['hostname'])
             if vent == None:
                 continue
             for i in groupdata:

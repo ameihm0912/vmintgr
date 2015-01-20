@@ -6,4 +6,3 @@ from exempt import *
 from sql import *
 from vmjson import *
 from vmmozdef import *
-from fuzzy import *

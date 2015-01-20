@@ -19,8 +19,6 @@ class VMConfig(object):
         self.compliance_link = None
         self.dbbackup = 28800
 
-        self.fuzzyhints = {}
-
         self.vulnquery_where = ''
 
         self.exempt_dir = None

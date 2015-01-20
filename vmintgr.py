@@ -39,7 +39,6 @@ def usage():
         '\t-D\t\tDevice auto-purge\n' \
         '\t-e\t\tEscalation pass against database\n' \
         '\t-f path\t\tPath to configuration file\n' \
-        '\t-F hints\tAttempt use of fuzzy matching for automation\n' \
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
         '\t-m\t\tDequeue events to MozDef\n' \
@@ -63,7 +62,7 @@ def wf_asset_grouping():
     libvmintgr.printd('starting asset grouping workflow...')
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
-    libvmintgr.asset_grouping(scanner, fuzzhints=vmconfig.fuzzyhints)
+    libvmintgr.asset_grouping(scanner)
 
 def wf_asset_dump():
     libvmintgr.printd('starting asset dump workflow...')
@@ -224,7 +223,6 @@ def domain():
     reptest = False
     mozdefmode = False
     cvemode = False
-    fuzzyhints = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:F:GhmRr:SsVtw:')
@@ -262,8 +260,6 @@ def domain():
         elif o == '-e':
             escmode = True
             selection = True
-        elif o == '-F':
-            fuzzyhints = a
         elif o == '-G':
             grouplistmode = True
             selection = True
@@ -308,9 +304,6 @@ def domain():
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)
     scanner = libvmintgr.nexpose_connector(vmconfig.vms_server, \
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)
-
-    if fuzzyhints != None:
-        vmconfig.fuzzyhints = libvmintgr.fuzzy_match_load(fuzzyhints)
 
     if replistmode:
         wf_list_reports()
