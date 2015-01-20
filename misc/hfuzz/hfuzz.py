@@ -78,7 +78,7 @@ def domain():
         else:
             sys.stdout.write('%s ?\n' % h)
         if proc % 40 == 0:
-            sys.stdout.write('%d processed, %d hits - %.2f%% complete\n' % \
+            sys.stderr.write('%d processed, %d hits - %.2f%% complete\n' % \
                 (proc, hit, (float(proc) / float(lncnt)) * 100))
     fd.close()
 
