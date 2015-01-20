@@ -355,6 +355,8 @@ def load_vulnauto_list(path):
             elif k == 'namematch':
                 if v != '':
                     for i in v.split():
+                        if i == '#AUTOADD':
+                            continue
                         n.add_namematch(i)
             elif k == 'name':
                 n.title = v
