@@ -225,7 +225,7 @@ def domain():
     cvemode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:F:GhmRr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:GhmRr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
