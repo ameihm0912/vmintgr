@@ -336,6 +336,9 @@ def load_vulnauto(dirpath, vmdbconn):
     dbconn = vmdbconn
     dirlist = os.listdir(dirpath)
     for i in dirlist:
+        # Ignore templates
+        if '.tmpl' in i:
+            continue
         load_vulnauto_list(os.path.join(dirpath, i))
 
 def load_vulnauto_list(path):
