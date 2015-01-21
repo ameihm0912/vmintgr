@@ -233,6 +233,11 @@ class VMIntDB(object):
             v.macaddr = i['mac'].encode('ascii', errors='ignore')
             v.hostname = i['hostname'].encode('ascii', errors='ignore')
             v.vid = i['nxvid']
+
+            # All that is stored right now is Nexpose vulnerabilities, so
+            # create a classification value including that
+            v.vid_classified = 'nexpose:%d' % v.vid
+
             rowvid = i['vid']
             v.discovered_date_unix = i['detected']
             v.title = i['title'].encode('ascii', errors='ignore')

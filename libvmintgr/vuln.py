@@ -107,6 +107,7 @@ class vulnerability(object):
         self.cvss = None
         self.rhsa = None
         self.vid = None
+        self.vid_classified = None
         self.known_exploits = None
         self.known_malware = None
 
