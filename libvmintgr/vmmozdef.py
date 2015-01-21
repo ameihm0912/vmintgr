@@ -17,13 +17,11 @@ def mozdef_proc(escdir, mozdef_compliance_url, mozdef_vuln_url):
         fd.close()
 
         if 'vulns' in i:
-            summary = 'vmintgr-vulnerability'
-            tags = ['vmintgr', 'vulnerability']
-            msg = mozdef.MozDefMsg(mozdef_vuln_url, summary, tags)
+            msg = mozdef.MozDefMsg(mozdef_vuln_url)
             msg.fire_and_forget_mode = False
             for j in events:
                 d = json.loads(j)
-                msg.send_event(summary, tags, details=d)
+                msg.send_vulnerability(d)
         elif 'compliance' in i:
             msg = mozdef.MozDefMsg(mozdef_compliance_url)
             msg.fire_and_forget_mode = False
