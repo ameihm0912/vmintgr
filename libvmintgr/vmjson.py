@@ -26,6 +26,7 @@ def wf_to_json(w):
         pytz.timezone('UTC').localize(datetime.datetime.utcnow()).isoformat()
 
     ret['asset'] = {}
+    ret['asset']['assetid'] = w.vulnerability.assetid
     ret['asset']['ipv4address'] = w.vulnerability.ipaddr
     ret['asset']['hostname'] = w.vulnerability.hostname
     ret['asset']['macaddress'] = w.vulnerability.macaddr
