@@ -110,6 +110,7 @@ class vulnerability(object):
         self.vid_classified = None
         self.known_exploits = None
         self.known_malware = None
+        self.autogroup = None
 
     def __str__(self):
         buf = '----- %d %s | %s | %s\n' \
@@ -320,7 +321,7 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
         # CVSS value to see if we should proceed
         if v.cvss >= vauto.mincvss:
             debug.printd('processing vulnerability %s' % v.vid)
-            dbconn.add_vulnerability(v, dbassetid)
+            dbconn.add_vulnerability(v, dbassetid, vauto)
         else:
             debug.printd('skipping vulnerability %s as it does not meet ' \
                 'minimum cvss score' % v.vid)

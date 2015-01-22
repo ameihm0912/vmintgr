@@ -45,7 +45,7 @@ class VMIntDB(object):
 
         c.execute('''CREATE TABLE IF NOT EXISTS assetvulns
             (id INTEGER PRIMARY KEY, aid INTEGER, vid INTEGER,
-            detected INTEGER, age REAL,
+            detected INTEGER, age REAL, autogroup STRING,
             UNIQUE (aid, vid),
             FOREIGN KEY(aid) REFERENCES assets(id),
             FOREIGN KEY(vid) REFERENCES vulns(id))''')
@@ -210,7 +210,8 @@ class VMIntDB(object):
             assets.mac, vulns.nxvid, vulns.title, vulns.cvss,
             vulns.known_exploits, vulns.known_malware,
             assetvulns.detected, assetvulns.age,
-            workflow.lasthandled, workflow.contact, workflow.status
+            workflow.lasthandled, workflow.contact, workflow.status,
+            assetvulns.autogroup
             FROM assetvulns
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
@@ -233,6 +234,7 @@ class VMIntDB(object):
             v.macaddr = i['mac'].encode('ascii', errors='ignore')
             v.hostname = i['hostname'].encode('ascii', errors='ignore')
             v.vid = i['nxvid']
+            v.autogroup = i['autogroup']
 
             # All that is stored right now is Nexpose vulnerabilities, so
             # create a classification value including that
@@ -305,7 +307,7 @@ class VMIntDB(object):
         self._conn.commit()
         return ret
 
-    def add_vulnerability(self, v, dbassetid):
+    def add_vulnerability(self, v, dbassetid, vauto):
         c = self._conn.cursor()
 
         c.execute('''SELECT assetvulns.id FROM assetvulns
@@ -317,8 +319,8 @@ class VMIntDB(object):
             # This is a new issue for this asset
             vulnrow = self.add_vuln_master(v)
             c.execute('''INSERT INTO assetvulns VALUES (NULL, %d,
-                %s, %d, %f)''' % (dbassetid, vulnrow,
-                v.discovered_date_unix, v.age_days))
+                %s, %d, %f, "%s")''' % (dbassetid, vulnrow,
+                v.discovered_date_unix, v.age_days, vauto.name))
             entrow = c.lastrowid
             c.execute('''INSERT INTO workflow VALUES (NULL, %s,
                 0, %d, 0)''' % (entrow, int(calendar.timegm(time.gmtime()))))

@@ -30,6 +30,7 @@ def wf_to_json(w):
     ret['asset']['ipv4address'] = w.vulnerability.ipaddr
     ret['asset']['hostname'] = w.vulnerability.hostname
     ret['asset']['macaddress'] = w.vulnerability.macaddr
+    ret['asset']['autogroup'] = w.vulnerability.autogroup
 
     ret['vuln'] = {}
     if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
