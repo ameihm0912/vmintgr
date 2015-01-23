@@ -313,6 +313,10 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
 
     # Make sure the asset exists in the database, if not add it
     dbassetid = dbconn.add_asset(uid, aid, address, mac, hostname)
+    if dbassetid == None:
+        # The asset wasn't added, probably because it is a duplicate of another
+        # asset, if this happens we are done
+        return
     debug.printd('using db asset %d' % dbassetid)
 
     for v in vlist:

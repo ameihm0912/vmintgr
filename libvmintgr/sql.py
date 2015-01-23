@@ -347,11 +347,27 @@ class VMIntDB(object):
                 WHERE vid = %d''' % (vuln.WorkflowElement.STATUS_RESOLVED,
                 i[1]))
 
+    def asset_duplicate_resolver(self, uid):
+        # Given a UID, try to resolve duplicates in the database, returning a
+        # list of asset ids that match the supplied uid
+        uidel = uid.split('|')
+        uidel[1] = '%'
+        searchuid = '|'.join(uidel)
+        c = self._conn.cursor()
+        c.execute('''SELECT id FROM assets WHERE uid LIKE "%s"''' % searchuid)
+        rows = c.fetchall()
+        return [x[0] for x in rows]
+
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()
         c.execute('''SELECT id FROM assets WHERE uid="%s"''' % uid)
         rows = c.fetchall()
         if len(rows) == 0:
+            # Before we add the asset, make sure this isn't a duplicate being
+            # reported by the scanner
+            if len(self.asset_duplicate_resolver(uid)) != 0:
+                debug.printd('aid %d looks like a duplicate, ignoring' % aid)
+                return None
             c.execute('''INSERT INTO assets VALUES (NULL, "%s", %d,
                 "%s", "%s", "%s")''' % (uid, aid, address, hostname, mac))
             ret = c.lastrowid
