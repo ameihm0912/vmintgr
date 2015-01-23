@@ -49,7 +49,23 @@ def domain():
         for i in idx:
             sys.stdout.write('%s %d\n' % (i, idx[i]['num_docs']))
     elif opmode == MODE_CREATE:
-        es.indices.create_index(index)
+        stgs = {
+                'mappings': {
+                        'vulnerability_state': {
+                            'properties': {
+                                'vuln': {
+                                    'properties': {
+                                        'title': {
+                                            'type': 'string',
+                                            'index': 'not_analyzed'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+        es.indices.create_index(index, stgs)
     elif opmode == MODE_DELETE:
         es.indices.delete_index(index)
 
