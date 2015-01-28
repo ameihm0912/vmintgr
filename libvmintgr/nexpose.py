@@ -5,24 +5,35 @@
 import sys
 import os
 import xml.etree.ElementTree as ET
-import StringIO
+try:
+    import StringIO
+except ImportError:
+    import io
+    StringIO = io.StringIO
 import csv
 import time
 import datetime
 import pytz
 import tempfile
 import urllib
-import urllib2
-import cookielib
+try:
+    from urllib2 import build_opener, install_opener, Request, urlopen, HTTPCookieProcessor
+except ImportError:
+    import urllib.request
+    from urllib.request import build_opener, install_opener, Request, urlopen, HTTPCookieProcessor
+try:
+    from cookielib import LWPCookieJar
+except ImportError:
+    from http.cookiejar import LWPCookieJar
 import re
 import netaddr
 
-sys.path.append('../../pnexpose')
+import libvmintgr.debug
+import libvmintgr.vuln
+import libvmintgr.exempt
 
+sys.path.append('../../pnexpose')
 import pnexpose
-import debug
-import vuln
-import exempt
 
 cookiejar = None
 nx_console_server = None
@@ -48,12 +59,12 @@ def nexpose_consolelogin(server, port, user, pw):
     nx_console_server = server
     nx_console_port = port
 
-    cookiejar = cookielib.LWPCookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-    urllib2.install_opener(opener)
+    cookiejar = LWPCookieJar()
+    opener = build_opener(HTTPCookieProcessor(cookiejar))
+    install_opener(opener)
     formdata = urllib.urlencode(vals)
-    req = urllib2.Request(loginurl, formdata)
-    resp = urllib2.urlopen(req)
+    req = Request(loginurl, formdata)
+    resp = urlopen(req)
 
     # XXX Handle a failed login here
 
@@ -137,10 +148,10 @@ def nexpose_fetch_report(repid, reploc):
 
     url = 'https://%s:%d/%s' % (nx_console_server, nx_console_port, reploc)
 
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-    urllib2.install_opener(opener)
-    req = urllib2.Request(url, None)
-    resp = urllib2.urlopen(req)
+    opener = build_opener(HTTPCookieProcessor(cookiejar))
+    install_opener(opener)
+    req = Request(url, None)
+    resp =urlopen(req)
     return resp.read()
 
 def reptest(scanner):
@@ -160,7 +171,7 @@ def reptest(scanner):
         return
 
     ret = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
-    print ret
+    print(ret)
     sys.exit(0)
 
 def add_asset_properties(scanner):

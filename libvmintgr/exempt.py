@@ -4,11 +4,15 @@
 
 import sys
 import os
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+
 import re
 from netaddr import IPNetwork, IPAddress
 
-import debug
+import libvmintgr.debug
 
 exemptlist_hosts = []
 exemptlist_nets = []

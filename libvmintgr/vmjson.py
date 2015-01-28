@@ -9,7 +9,7 @@ import time
 import pytz
 import datetime
 
-import vuln
+import libvmintgr.vuln
 
 DEFDESC = "system vulnerability management automation"
 
