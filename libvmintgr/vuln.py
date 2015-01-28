@@ -6,14 +6,20 @@ import sys
 import os
 import calendar
 import time
-import ConfigParser
-import cPickle
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+try:
+    import cPickle
+except ImportError:
+    import pickle as cPickle
 import re
 from netaddr import *
 
-import debug
-import sql
-import vmjson
+import libvmintgr.debug as debug
+import libvmintgr.sql as sql
+import libvmintgr.vmjson as vmjson
 
 vulnautolist = []
 uidcache = []
