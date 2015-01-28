@@ -201,7 +201,11 @@ def dbbackup(path):
 def open_pidfile():
     global pidfd
     pidfd = open(vmconfig.pidfile, 'w')
-    fcntl.lockf(pidfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    try:
+        fcntl.lockf(pidfd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError:
+        sys.stderr.write('cannot lock %s: vmintgr already running?\n' % vmconfig.pidfile)
+        sys.exit(1)
     pidfd.write(str(os.getpid()))
 
 def domain():
