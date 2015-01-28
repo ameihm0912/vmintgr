@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import ConfigParser
 import sys
 
@@ -35,13 +39,13 @@ class VMConfig(object):
         self.devauth_report = None
 
         if fn == None:
-	    fn = self._def_conf_path
+            fn = self._def_conf_path
 
         self._cp = ConfigParser.SafeConfigParser()
         self._cp.read(fn)
         if len(self._cp.sections()) == 0:
-	    sys.stderr.write('error reading %s\n' % fn)
-	    sys.exit(1)
+            sys.stderr.write('error reading %s\n' % fn)
+            sys.exit(1)
 
         for s in self._cp.sections():
             if s == 'vms':
