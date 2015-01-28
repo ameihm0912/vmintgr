@@ -17,9 +17,9 @@ except ImportError:
 import re
 from netaddr import *
 
-import libvmintgr.debug
-import libvmintgr.sql
-import libvmintgr.vmjson
+import libvmintgr.debug as debug
+import libvmintgr.sql as sql
+import libvmintgr.vmjson as vmjson
 
 vulnautolist = []
 uidcache = []

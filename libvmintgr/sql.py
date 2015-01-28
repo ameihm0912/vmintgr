@@ -9,8 +9,8 @@ import calendar
 import time
 import sys
 
-import libvmintgr.vuln
-import libvmintgr.debug
+import vuln
+import debug
 
 class VMIntDB(object):
     SVER = 1

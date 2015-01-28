@@ -28,9 +28,9 @@ except ImportError:
 import re
 import netaddr
 
-import libvmintgr.debug
-import libvmintgr.vuln
-import libvmintgr.exempt
+import libvmintgr.debug as debug
+import libvmintgr.vuln as vuln
+import libvmintgr.exempt as exempt
 
 sys.path.append('../../pnexpose')
 import pnexpose

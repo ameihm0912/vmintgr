@@ -12,7 +12,7 @@ except ImportError:
 import re
 from netaddr import IPNetwork, IPAddress
 
-import libvmintgr.debug
+import libvmintgr.debug as debug
 
 exemptlist_hosts = []
 exemptlist_nets = []
