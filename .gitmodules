@@ -1,6 +1,6 @@
 [submodule "pnexpose"]
 	path = pnexpose
-	url = https://github.com/gdestuynder/pnexpose
+	url = https://github.com/ameihm0912/pnexpose
 [submodule "mozdef_client"]
 	path = mozdef_client
 	url = https://github.com/gdestuynder/mozdef_client
