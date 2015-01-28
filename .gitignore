@@ -1,0 +1,4 @@
+*.pyc
+vmintgr.db*
+vmintgr.log
+vmintgr.pid
