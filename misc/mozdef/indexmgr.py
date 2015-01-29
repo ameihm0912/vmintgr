@@ -61,6 +61,10 @@ def domain():
                                         'title': {
                                             'type': 'string',
                                             'index': 'not_analyzed'
+                                            },
+                                        'cves': {
+                                            'type': 'string',
+                                            'index': 'not_analyzed'
                                             }
                                         }
                                     }
