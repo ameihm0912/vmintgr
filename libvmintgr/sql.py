@@ -196,12 +196,12 @@ class VMIntDB(object):
 
         v = vuln.vulnerability()
         v.assetid = aid
-        v.ipaddr = i['ip'].encode('ascii', errors='ignore')
-        v.macaddr = i['mac'].encode('ascii', errors='ignore')
-        v.hostname = i['hostname'].encode('ascii', errors='ignore')
+        v.ipaddr = i['ip'].encode('ascii', 'ignore')
+        v.macaddr = i['mac'].encode('ascii', 'ignore')
+        v.hostname = i['hostname'].encode('ascii', 'ignore')
         v.vid = i['nxvid']
         v.age_days = i['age']
-        v.title = i['title'].encode('ascii', errors='ignore')
+        v.title = i['title'].encode('ascii', 'ignore')
         v.cvss = i['cvss']
         ce.failvuln = v
 
@@ -234,9 +234,9 @@ class VMIntDB(object):
 
             v = vuln.vulnerability()
             v.assetid = aid
-            v.ipaddr = i['ip'].encode('ascii', errors='ignore')
-            v.macaddr = i['mac'].encode('ascii', errors='ignore')
-            v.hostname = i['hostname'].encode('ascii', errors='ignore')
+            v.ipaddr = i['ip'].encode('ascii', 'ignore')
+            v.macaddr = i['mac'].encode('ascii', 'ignore')
+            v.hostname = i['hostname'].encode('ascii', 'ignore')
             v.vid = i['nxvid']
             v.autogroup = i['autogroup']
 
@@ -246,7 +246,7 @@ class VMIntDB(object):
 
             rowvid = i['vid']
             v.discovered_date_unix = i['detected']
-            v.title = i['title'].encode('ascii', errors='ignore')
+            v.title = i['title'].encode('ascii', 'ignore')
             v.cvss = i['cvss']
             v.known_malware = False
             v.known_exploits = False
@@ -262,7 +262,7 @@ class VMIntDB(object):
             rows2 = c.fetchall()
             v.cves = []
             for j in rows2:
-                v.cves.append(j[0].encode('ascii', errors='ignore'))
+                v.cves.append(j[0].encode('ascii', 'ignore'))
 
             wfe.vulnerability = v
 
