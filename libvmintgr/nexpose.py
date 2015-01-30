@@ -345,8 +345,11 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
         dt = dt.replace(tzinfo=pytz.UTC)
         v.discovered_date = dt
 
-        v.discovered_date_unix = int((v.discovered_date - \
-            datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)).total_seconds())
+        def get_total_seconds(td):
+            return (td.microseconds + (td.seconds + td.days * 24 * 3600) \
+                    * 1e6) / 1e6
+        v.discovered_date_unix = int(get_total_seconds(v.discovered_date - \
+            datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)))
 
         v.cvss = float(i[11])
         for i in i[12].split(','):
