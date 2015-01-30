@@ -41,7 +41,7 @@ nx_console_port = None
 
 class nexpose_connector(object):
     def __init__(self, server, port, user, pw):
-        self.conn = pnexpose.nexposeClient(server, port, user, pw)
+        self.conn = pnexpose.Connection(server, port, user, pw)
         self.sitelist = {}
         self.grouplist = {}
 
@@ -400,13 +400,12 @@ def vuln_instance_link(v, scanner):
 
 def site_extraction(scanner):
     debug.printd('requesting site information')
-    sitedata = scanner.conn.site_listing()
-    root = ET.fromstring(sitedata)
+    sitedata = scanner.conn.list_sites()
 
-    for s in root:
+    for s in sitedata:
         siteinfo = {}
-        siteinfo['name'] = s.attrib['name']
-        siteinfo['id'] = s.attrib['id']
+        siteinfo['name'] = s.name
+        siteinfo['id'] = str(s.id)
         siteinfo['assets'] = []
         scanner.sitelist[siteinfo['id']] = siteinfo
     debug.printd('read %d sites' % len(scanner.sitelist))
