@@ -94,7 +94,6 @@ class VulnAutoEntry(object):
 
         best = -1
         for i in self._match_net:
-            print i
             if ip in i[0]:
                 cur = i[0].netmask.bits().count('1')
                 cur += self.pri_adjust[i[1]]
