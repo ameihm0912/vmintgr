@@ -43,44 +43,64 @@ class ComplianceLevels(object):
     }
 
 class VulnAutoEntry(object):
+    pri_adjust = {
+            0: 9,
+            1: 8,
+            2: 7,
+            3: 6,
+            4: 5,
+            5: 4,
+            6: 3,
+            7: 2,
+            8: 1,
+            9: 0
+        }
+
     def __init__(self, name):
         self.name = name
         self.title = None
         self.description = None
         self.mincvss = None
 
-        self._match_ip = None
-        self._match_net = None
+        self._match_ip = []
+        self._match_net = []
         self._match_name = []
 
-    def add_match(self, val):
+    def add_match(self, val, pri):
         if '/' in val:
-            self._match_net = IPNetwork(val)
+            self._match_net.append((IPNetwork(val), pri))
         else:
-            self._match_ip = IPAddress(val)
+            self._match_ip.append((IPAddress(val), pri))
 
-    def add_namematch(self, val):
-        self._match_name.append(re.compile(val))
+    def add_namematch(self, val, pri):
+        self._match_name.append((re.compile(val), pri))
 
     def name_test(self, hostname):
+        best = -1
         for i in self._match_name:
-            if i.match(hostname):
-                return True
-        return False
+            if i[0].match(hostname):
+                cur = 75 + self.pri_adjust[i[1]]
+                if cur > best:
+                    best = cur
+        return best
 
     def ip_test(self, ipstr):
         ip = IPAddress(ipstr)
 
         # First try the IP
-        if self._match_ip != None:
-            if self._match_ip == ip:
-                return 32
+        for i in self._match_ip:
+            if i[0] == ip:
+                return 50
 
-        if self._match_net != None:
-            if ip in self._match_net:
-                return self._match_net.netmask.bits().count('1')
-
-        return -1
+        best = -1
+        for i in self._match_net:
+            print i
+            if ip in i[0]:
+                cur = i[0].netmask.bits().count('1')
+                cur += self.pri_adjust[i[1]]
+                if cur > best:
+                    best = cur
+        return best
 
 class WorkflowElement(object):
     STATUS_NONE = 0
@@ -258,15 +278,15 @@ def calculate_compliance(uid):
     dbconn.compliance_update(uid, failflag, failvid)
 
 def vuln_auto_finder(address, mac, hostname):
-    cand = None
+    candlist = None
     last = -1
     for va in vulnautolist:
-        # Prioritize matching on hostname by default, if we match here just
-        # stop looking
-        if va.name_test(hostname):
-            cand = va
-            last = 100
-            break
+        ret = va.name_test(hostname)
+        if ret != -1:
+            if ret > last:
+                cand = va
+                last = ret
+            continue
 
         ret = va.ip_test(address)
         if ret == -1:
@@ -357,6 +377,17 @@ def load_vulnauto(dirpath, vmdbconn):
             continue
         load_vulnauto_list(os.path.join(dirpath, i))
 
+def vulnauto_extract_pri(s):
+    if len(s) < 4:
+        return (s, 9)
+    if s[0] != '{':
+        return (s, 9)
+    pri = int(s[1])
+    if pri < 0 or pri > 9:
+        raise Exception('bad priority for %s' % s)
+    ret = s[3:]
+    return (ret, pri)
+
 def load_vulnauto_list(path):
     debug.printd('reading automation data from %s' % path)
     cp = ConfigParser.SafeConfigParser()
@@ -370,13 +401,15 @@ def load_vulnauto_list(path):
                 pass
             elif k == 'ipmatch':
                 if v != '':
-                    n.add_match(v)
+                    newval = vulnauto_extract_pri(v)
+                    n.add_match(newval[0], newval[1])
             elif k == 'namematch':
                 if v != '':
                     for i in v.split():
                         if i == '#AUTOADD':
                             continue
-                        n.add_namematch(i)
+                        newval = vulnauto_extract_pri(i)
+                        n.add_namematch(newval[0], newval[1])
             elif k == 'name':
                 n.title = v
             elif k == 'description':
