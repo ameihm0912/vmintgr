@@ -298,6 +298,7 @@ def domain():
     logfile_init(vmconfig.logfile)
     libvmintgr.set_compliance_urls(vmconfig.compliance_url,
         vmconfig.compliance_link)
+    libvmintgr.set_sourcename(vmconfig.srcname)
 
     open_pidfile()
 

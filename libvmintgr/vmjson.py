@@ -13,8 +13,13 @@ import vuln
 
 DEFDESC = "system vulnerability management automation"
 
+srcname = 'unset'
 compliance_url = 'unset'
 compliance_link = 'unset'
+
+def set_sourcename(s):
+    global srcname
+    srcname = s
 
 def set_compliance_urls(u1, u2):
     global compliance_url
@@ -28,6 +33,7 @@ def wf_to_json(w):
     ret['description'] = DEFDESC
     ret['utctimestamp'] = \
         pytz.timezone('UTC').localize(datetime.datetime.utcnow()).isoformat()
+    ret['sourcename'] = srcname
 
     ret['asset'] = {}
     ret['asset']['assetid'] = w.vulnerability.assetid
