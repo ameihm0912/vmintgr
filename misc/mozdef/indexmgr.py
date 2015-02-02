@@ -8,7 +8,7 @@ import pyes
 import getopt
 
 es = None
-index = 'vulnerability'
+index = 'vulnerabilities'
 
 MODE_UNSET  = 0
 MODE_LIST   = 1
