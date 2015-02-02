@@ -139,22 +139,9 @@ class VMIntDB(object):
 
     def workflow_handled(self, wfid, flag):
         c = self._conn.cursor()
-        # If the workflow element has been closed just remove the element
-        # in addition to the asset vulnerability entry the element is
-        # associated with.
-        if flag == vuln.WorkflowElement.STATUS_CLOSED:
-            c.execute('''SELECT vid FROM workflow WHERE id = %d''' % wfid)
-            rows = c.fetchall()
-            if len(rows) == 0:
-                raise Exception('workflow referencing vulnerability that' \
-                    ' does not exist')
-            delvid = rows[0][0]
-            c.execute('''DELETE FROM workflow WHERE id = %d''' % wfid)
-            c.execute('''DELETE FROM assetvulns WHERE id = %d''' % delvid)
-        else:
-            c.execute('''UPDATE workflow SET status = %d, lasthandled = %d
-                WHERE id = %d''' % (flag, 
-                int(calendar.timegm(time.gmtime())), wfid))
+        c.execute('''UPDATE workflow SET status = %d, lasthandled = %d
+            WHERE id = %d''' % (flag, 
+            int(calendar.timegm(time.gmtime())), wfid))
         self._conn.commit()
 
     def aid_to_host(self, aid):

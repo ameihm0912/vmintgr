@@ -168,11 +168,6 @@ def escalate_vulns(escdir, escalate_vulns, escalate_compliance):
         wfes = dbconn.get_workflow(i)
 
         for w in wfes:
-            # Only escalate things that haven't been handled yet
-            if w.status != WorkflowElement.STATUS_NONE and \
-                w.status != WorkflowElement.STATUS_RESOLVED:
-                continue
-
             if w.status == WorkflowElement.STATUS_NONE:
                 w.status = WorkflowElement.STATUS_ESCALATED
             elif w.status == WorkflowElement.STATUS_RESOLVED:

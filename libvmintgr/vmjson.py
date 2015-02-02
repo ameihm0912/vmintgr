@@ -38,7 +38,7 @@ def wf_to_json(w):
 
     ret['vuln'] = {}
     if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
-        ret['vuln']['status'] = 'new'
+        ret['vuln']['status'] = 'open'
     elif w.status == vuln.WorkflowElement.STATUS_CLOSED:
         ret['vuln']['status'] = 'closed'
     else:
