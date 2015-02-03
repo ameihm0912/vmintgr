@@ -51,6 +51,7 @@ def wf_to_json(w):
         ret['vuln']['status'] = 'unknown'
     ret['vuln']['title'] = w.vulnerability.title
     ret['vuln']['cvss'] = w.vulnerability.cvss
+    ret['vuln']['impact_label'] = w.vulnerability.impact_label
     ret['vuln']['known_exploits'] = w.vulnerability.known_exploits
     ret['vuln']['known_malware'] = w.vulnerability.known_malware
     ret['vuln']['discovery_time'] = w.vulnerability.discovered_date_unix

@@ -135,6 +135,7 @@ class vulnerability(object):
         self.patch_in = None
         self.cves = None
         self.cvss = None
+        self.impact_label = None
         self.rhsa = None
         self.vid = None
         self.vid_classified = None
@@ -152,6 +153,12 @@ class vulnerability(object):
                 self.sitename, self.hostname, self.macaddr,
                 self.discovered_date)
         return buf
+
+def cvss_to_label(cvss):
+    for i in ComplianceLevels.ORDERING:
+        if cvss >= ComplianceLevels.FLOOR[i]:
+            return i
+    return 'unknown'
 
 def cvss_to_patch_in(cvss):
     for i in ComplianceLevels.ORDERING:

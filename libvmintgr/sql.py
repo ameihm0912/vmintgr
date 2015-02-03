@@ -235,6 +235,7 @@ class VMIntDB(object):
             v.discovered_date_unix = i['detected']
             v.title = i['title'].encode('ascii', 'ignore')
             v.cvss = i['cvss']
+            v.impact_label = vuln.cvss_to_label(v.cvss)
             v.known_malware = False
             v.known_exploits = False
             if i['known_malware'] != 0:
