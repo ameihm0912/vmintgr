@@ -306,6 +306,25 @@ class VMIntDB(object):
         self._conn.commit()
         return ret
 
+    def workflow_check_reset(self, vid):
+        # This function is called by add_vulnerability to handle a case where
+        # a vulnerability reappears on an asset after it has been resolved.
+        # We basically check the vid to see if it is resolved/closed, if it
+        # is reset it to new.
+        c = self._conn.cursor()
+
+        c.execute('''SELECT status FROM workflow
+            WHERE vid = %d''' % vid)
+        rows = c.fetchall()
+        if len(rows) == 0:
+            return
+        sts = rows[0][0]
+        if sts == vuln.WorkflowElement.STATUS_RESOLVED or \
+            sts == vuln.WorkflowElement.STATUS_CLOSED:
+            c.execute('''UPDATE workflow SET status = 0
+                WHERE vid = %d''' % vid)
+            debug.printd('reset status on vid %d' % vid)
+
     def add_vulnerability(self, v, dbassetid, vauto):
         c = self._conn.cursor()
 
@@ -327,6 +346,7 @@ class VMIntDB(object):
             c.execute('''UPDATE assetvulns SET detected = %d,
                 age = %f WHERE
                 id = %d''' % (v.discovered_date_unix, v.age_days, rows[0][0]))
+            self.workflow_check_reset(rows[0][0])
         self._conn.commit()
 
     def resolve_vulnerability(self, vidlist, dbassetid):
