@@ -243,6 +243,10 @@ class VMIntDB(object):
                 v.known_exploits = True
             v.age_days = i['age']
 
+            # Based on the score of the vulnerability, include the expected
+            # patch time (based on initial detection)
+            v.patch_in = vuln.cvss_to_patch_in(v.cvss)
+
             # Supplement the element with associated CVEs
             c.execute('''SELECT cve FROM cves
                 WHERE vid = %d''' % rowvid)

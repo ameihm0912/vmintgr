@@ -132,6 +132,7 @@ class vulnerability(object):
         self.discovered_date = None
         self.discovered_date_unix = None
         self.age_days = None
+        self.patch_in = None
         self.cves = None
         self.cvss = None
         self.rhsa = None
@@ -151,6 +152,12 @@ class vulnerability(object):
                 self.sitename, self.hostname, self.macaddr,
                 self.discovered_date)
         return buf
+
+def cvss_to_patch_in(cvss):
+    for i in ComplianceLevels.ORDERING:
+        if cvss >= ComplianceLevels.FLOOR[i]:
+            break
+    return ComplianceLevels.LEVELS[i]
 
 def vuln_reset_uid_cache():
     global uidcache
