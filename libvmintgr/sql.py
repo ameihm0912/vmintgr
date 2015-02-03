@@ -45,6 +45,7 @@ class VMIntDB(object):
             (id INTEGER PRIMARY KEY, nxvid INTEGER,
             title TEXT, cvss REAL,
             known_exploits INTEGER, known_malware INTEGER,
+            description TEXT, cvss_vector TEXT,
             UNIQUE(nxvid))''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS assetvulns
@@ -202,7 +203,7 @@ class VMIntDB(object):
             vulns.known_exploits, vulns.known_malware,
             assetvulns.detected, assetvulns.age,
             workflow.lasthandled, workflow.contact, workflow.status,
-            assetvulns.autogroup
+            assetvulns.autogroup, vulns.description, vulns.cvss_vector
             FROM assetvulns
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
@@ -234,7 +235,9 @@ class VMIntDB(object):
             rowvid = i['vid']
             v.discovered_date_unix = i['detected']
             v.title = i['title'].encode('ascii', 'ignore')
+            v.description = i['description'].encode('ascii', 'ignore')
             v.cvss = i['cvss']
+            v.cvss_vector = i['cvss_vector']
             v.impact_label = vuln.cvss_to_label(v.cvss)
             v.known_malware = False
             v.known_exploits = False
@@ -286,8 +289,8 @@ class VMIntDB(object):
 
         try:
             c.execute('''INSERT INTO vulns VALUES (NULL,
-                %s, "%s", %f, %d, %d)''' % (v.vid, v.title,
-                v.cvss, exf, mwf))
+                %s, "%s", %f, %d, %d, "%s", "%s")''' % (v.vid, v.title,
+                v.cvss, exf, mwf, v.description, v.cvss_vector))
         except sqlite3.IntegrityError:
             exists = True
  

@@ -10,6 +10,7 @@ import pytz
 import datetime
 
 import vuln
+import cve
 
 DEFDESC = "system vulnerability management automation"
 
@@ -50,6 +51,7 @@ def wf_to_json(w):
     else:
         ret['vuln']['status'] = 'unknown'
     ret['vuln']['title'] = w.vulnerability.title
+    ret['vuln']['description'] = w.vulnerability.description
     ret['vuln']['cvss'] = w.vulnerability.cvss
     ret['vuln']['impact_label'] = w.vulnerability.impact_label
     ret['vuln']['known_exploits'] = w.vulnerability.known_exploits
@@ -61,6 +63,9 @@ def wf_to_json(w):
     ret['vuln']['cves'] = []
     for i in w.vulnerability.cves:
         ret['vuln']['cves'].append(i)
+
+    ret['vuln']['cvss_vector'] = \
+        cve.cve_expand_cvss_vector(w.vulnerability.cvss_vector)
 
     return json.dumps(ret)
 

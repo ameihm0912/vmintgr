@@ -129,12 +129,14 @@ class vulnerability(object):
         self.hostname = None
         self.macaddr = None
         self.title = None
+        self.description = None
         self.discovered_date = None
         self.discovered_date_unix = None
         self.age_days = None
         self.patch_in = None
         self.cves = None
         self.cvss = None
+        self.cvss_vector = None
         self.impact_label = None
         self.rhsa = None
         self.vid = None
