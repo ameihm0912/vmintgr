@@ -29,11 +29,11 @@ dbconn = None
 class ComplianceLevels(object):
     ORDERING = ('maximum', 'high', 'mediumlow')
     LEVELS = {
-        # 2 days
+        # 1 day
         'maximum': 1.0,
-        # 2 weeks
+        # 1 week
         'high': 7.0,
-        # 3 months
+        # 1 month
         'mediumlow': 30.0
     }
     FLOOR = {
