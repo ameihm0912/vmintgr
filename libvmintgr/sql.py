@@ -51,6 +51,7 @@ class VMIntDB(object):
         c.execute('''CREATE TABLE IF NOT EXISTS assetvulns
             (id INTEGER PRIMARY KEY, aid INTEGER, vid INTEGER,
             detected INTEGER, age REAL, autogroup STRING,
+            proof STRING,
             UNIQUE (aid, vid),
             FOREIGN KEY(aid) REFERENCES assets(id),
             FOREIGN KEY(vid) REFERENCES vulns(id))''')
@@ -204,7 +205,7 @@ class VMIntDB(object):
             assetvulns.detected, assetvulns.age,
             workflow.lasthandled, workflow.contact, workflow.status,
             assetvulns.autogroup, vulns.description, vulns.cvss_vector,
-            assets.nxaid
+            assets.nxaid, assetvulns.proof
             FROM assetvulns
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
@@ -229,6 +230,7 @@ class VMIntDB(object):
             v.hostname = i['hostname'].encode('ascii', 'ignore')
             v.vid = i['nxvid']
             v.autogroup = i['autogroup']
+            v.proof = i['proof']
 
             # All that is stored right now is Nexpose vulnerabilities, so
             # create a classification value including that
@@ -339,8 +341,9 @@ class VMIntDB(object):
             # This is a new issue for this asset
             vulnrow = self.add_vuln_master(v)
             c.execute('''INSERT INTO assetvulns VALUES (NULL, %d,
-                %s, %d, %f, "%s")''' % (dbassetid, vulnrow,
-                v.discovered_date_unix, v.age_days, vauto.name))
+                %s, %d, %f, "%s", "%s")''' % (dbassetid, vulnrow,
+                v.discovered_date_unix, v.age_days, vauto.name,
+                v.proof))
             entrow = c.lastrowid
             c.execute('''INSERT INTO workflow VALUES (NULL, %s,
                 0, %d, 0)''' % (entrow, int(calendar.timegm(time.gmtime()))))
@@ -349,6 +352,10 @@ class VMIntDB(object):
                 age = %f WHERE
                 id = %d''' % (v.discovered_date_unix, v.age_days, rows[0][0]))
             self.workflow_check_reset(rows[0][0])
+            # Update the proof associated with this issue as reported by Nexpose
+            c.execute('''UPDATE assetvulns SET proof = "%s"
+                WHERE assetvulns.id = %d''' % \
+                (v.proof, rows[0][0]))
         self._conn.commit()
 
     def resolve_vulnerability(self, vidlist, dbassetid):

@@ -277,7 +277,8 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     dp.name AS protocol, dsvc.name AS service,
     round(dv.cvss_score::numeric, 2) AS cvss_score, vr.references, dv.exploits,
     dv.malware_kits, dv.vulnerability_id,
-    dv.description, dv.cvss_vector
+    dv.description, dv.cvss_vector,
+    proofAsText(favi.proof)
     FROM fact_asset_vulnerability_instance favi 
     JOIN dim_asset da USING (asset_id) 
     JOIN dim_vulnerability dv USING (vulnerability_id) 
@@ -339,6 +340,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
         v.vid = i[15]
         v.description = i[16]
         v.cvss_vector = i[17]
+        v.proof = i[18]
         idx = i[7].find('.')
         if idx > 0:
             dstr = i[7][:idx]

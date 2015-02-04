@@ -62,6 +62,7 @@ def wf_to_json(w):
     if send_description:
         ret['vuln']['description'] = w.vulnerability.description
     ret['vuln']['cvss'] = w.vulnerability.cvss
+    ret['vuln']['proof'] = w.vulnerability.proof
     ret['vuln']['impact_label'] = w.vulnerability.impact_label
     ret['vuln']['known_exploits'] = w.vulnerability.known_exploits
     ret['vuln']['known_malware'] = w.vulnerability.known_malware

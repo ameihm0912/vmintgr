@@ -146,6 +146,7 @@ class vulnerability(object):
         self.known_exploits = None
         self.known_malware = None
         self.autogroup = None
+        self.proof = None
 
     def __str__(self):
         buf = '----- %d %s | %s | %s\n' \
