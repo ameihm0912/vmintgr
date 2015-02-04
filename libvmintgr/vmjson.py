@@ -17,6 +17,11 @@ DEFDESC = "system vulnerability management automation"
 srcname = 'unset'
 compliance_url = 'unset'
 compliance_link = 'unset'
+send_description = False
+
+def set_send_description(s):
+    global send_description
+    send_description = s
 
 def set_sourcename(s):
     global srcname
@@ -51,7 +56,8 @@ def wf_to_json(w):
     else:
         ret['vuln']['status'] = 'unknown'
     ret['vuln']['title'] = w.vulnerability.title
-    ret['vuln']['description'] = w.vulnerability.description
+    if send_description:
+        ret['vuln']['description'] = w.vulnerability.description
     ret['vuln']['cvss'] = w.vulnerability.cvss
     ret['vuln']['impact_label'] = w.vulnerability.impact_label
     ret['vuln']['known_exploits'] = w.vulnerability.known_exploits

@@ -24,6 +24,7 @@ class VMConfig(object):
         self.srcname = None
         self.mozdef_compliance_url = None
         self.mozdef_vuln_url = None
+        self.mozdef_send_description = False
         self.compliance_url = None
         self.compliance_link = None
         self.dbbackup = 28800
@@ -65,6 +66,8 @@ class VMConfig(object):
                 mdesc = 'vulnauto'
             elif s == 'autopurge':
                 mdesc = 'autopurge'
+            elif s == 'mozdef':
+                mdesc = 'mozdef'
             elif s == 'debug':
                 mdesc = 'debug'
             else:
@@ -74,6 +77,17 @@ class VMConfig(object):
             parsefunc = getattr(self, 'parse_' + s)
             for k, v in self._cp.items(s):
                 parsefunc(k, v, s)
+
+    def parse_mozdef(self, k, v, s):
+        if k == 'send_description':
+            if v == '1':
+                self.mozdef_send_description = True
+            else:
+                self.mozdef_send_description = False
+        else:
+            sys.stderr.write('option %s not available under %s\n' % \
+                (k, s))
+            sys.exit(1)
 
     def parse_vulnauto(self, k, v, s):
         if k == 'vulndir':

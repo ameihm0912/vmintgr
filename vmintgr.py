@@ -299,6 +299,7 @@ def domain():
     libvmintgr.set_compliance_urls(vmconfig.compliance_url,
         vmconfig.compliance_link)
     libvmintgr.set_sourcename(vmconfig.srcname)
+    libvmintgr.set_send_description(vmconfig.mozdef_send_description)
 
     open_pidfile()
 
