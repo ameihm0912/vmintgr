@@ -48,6 +48,9 @@ def wf_to_json(w):
     ret['asset']['macaddress'] = w.vulnerability.macaddr
     ret['asset']['autogroup'] = w.vulnerability.autogroup
 
+    if w.vulnerability.os != None:
+        ret['asset']['os'] = w.vulnerability.os
+
     ret['vuln'] = {}
     if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
         ret['vuln']['status'] = 'open'

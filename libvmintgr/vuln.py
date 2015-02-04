@@ -109,6 +109,7 @@ class WorkflowElement(object):
 
     def __init__(self):
         self.workflow_id = None
+        self.assetid_site = None
         self.vulnerability = None
         self.lasthandled = None
         self.contact = None
@@ -128,6 +129,7 @@ class vulnerability(object):
         self.ipaddr = None
         self.hostname = None
         self.macaddr = None
+        self.os = None
         self.title = None
         self.description = None
         self.discovered_date = None
@@ -175,7 +177,14 @@ def vuln_reset_uid_cache():
 def expire_hosts():
     dbconn.expire_hosts(uidcache)
 
-def escalate_vulns(escdir, escalate_vulns, escalate_compliance):
+def sitelist_get_os(aid, scanner):
+    for s in scanner.sitelist.keys():
+        for a in scanner.sitelist[s]['assets']:
+            if a['id'] == aid:
+                return a['os']
+    return None
+
+def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
     ret = dbconn.asset_list()
     debug.printd('processing %d assets' % len(ret))
     vlist = []
@@ -188,6 +197,8 @@ def escalate_vulns(escdir, escalate_vulns, escalate_compliance):
                 w.status = WorkflowElement.STATUS_ESCALATED
             elif w.status == WorkflowElement.STATUS_RESOLVED:
                 w.status = WorkflowElement.STATUS_CLOSED
+
+            w.vulnerability.os = sitelist_get_os(w.assetid_site, scanner)
 
             # Create JSON event from the element
             jv = vmjson.wf_to_json(w)

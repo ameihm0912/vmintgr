@@ -203,7 +203,8 @@ class VMIntDB(object):
             vulns.known_exploits, vulns.known_malware,
             assetvulns.detected, assetvulns.age,
             workflow.lasthandled, workflow.contact, workflow.status,
-            assetvulns.autogroup, vulns.description, vulns.cvss_vector
+            assetvulns.autogroup, vulns.description, vulns.cvss_vector,
+            assets.nxaid
             FROM assetvulns
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
@@ -219,6 +220,7 @@ class VMIntDB(object):
             wfe.contact = i['contact']
             wfe.workflow_id = i['wid']
             wfe.status = i['status']
+            wfe.assetid_site = i['nxaid']
 
             v = vuln.vulnerability()
             v.assetid = aid

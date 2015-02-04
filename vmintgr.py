@@ -106,8 +106,10 @@ def wf_auto_purge():
     
 def wf_escalations():
     libvmintgr.printd('starting escalation workflow...')
-    libvmintgr.escalate_vulns(vmconfig.escdir, vmconfig.escalate_vulns,
-        vmconfig.escalate_compliance)
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    libvmintgr.escalate_vulns(vmconfig.escdir, scanner,
+        vmconfig.escalate_vulns, vmconfig.escalate_compliance)
     
 def wf_mozdef():
     libvmintgr.printd('dequeueing events to mozdef...')

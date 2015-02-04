@@ -211,6 +211,7 @@ def add_asset_properties(scanner):
                 continue
             a['hostname'] = atable[a['id']][2]
             a['macaddress'] = atable[a['id']][3]
+            a['os'] = atable[a['id']][4]
 
 def vuln_age_days(v, agedata):
     # It's possible here that if the -r flag was used as the source for
