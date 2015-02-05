@@ -386,12 +386,13 @@ class VMIntDB(object):
         return [x[0] for x in rows]
 
     def asset_search_and_update(self, uid, aid, address, mac, hostname):
-        # See if we had any previous instance of this MAC address, if so
-        # update the asset with possibly new value
+        # See if we had any previous instance of this MAC address and
+        # hostname, if so update the asset with new value
         if mac == '':
             return
         c = self._conn.cursor()
-        c.execute('''SELECT id, uid FROM assets WHERE mac = ?''', (mac,))
+        c.execute('''SELECT id, uid FROM assets WHERE mac = ?
+            AND hostname = ?''', (mac, hostname))
         rows = c.fetchall()
         if len(rows) == 0:
             return
