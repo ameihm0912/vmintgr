@@ -385,6 +385,22 @@ class VMIntDB(object):
         rows = c.fetchall()
         return [x[0] for x in rows]
 
+    def asset_search_and_update(self, uid, aid, address, mac, hostname):
+        # See if we had any previous instance of this MAC address, if so
+        # update the asset with possibly new value
+        c = self._conn.cursor()
+        c.execute('''SELECT id, uid FROM assets WHERE mac = ?''', (mac,))
+        rows = c.fetchall()
+        if len(rows) == 0:
+            return
+        if rows[0][1] == uid:
+            return
+        debug.printd('updating information for asset %s' % uid)
+        debug.printd('was: %s now: %s' % (rows[0][1], uid))
+        c.execute('''UPDATE assets SET uid = ?, ip = ?,
+            hostname = ?, nxaid = ? WHERE id = ?''',
+            (uid, address, hostname, aid, rows[0][0]))
+
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()
         c.execute('''SELECT id FROM assets WHERE uid="%s"''' % uid)

@@ -359,9 +359,7 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     if uid not in uidcache:
         uidcache.append(uid)
 
-    # XXX We will probably want to add something here to search and update
-    # any existing references for this asset where we had less information,
-    # this will likely need some sort of partial matching on fields.
+    dbconn.asset_search_and_update(uid, aid, address, mac, hostname)
 
     # Make sure the asset exists in the database, if not add it
     dbassetid = dbconn.add_asset(uid, aid, address, mac, hostname)
