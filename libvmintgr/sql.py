@@ -340,8 +340,8 @@ class VMIntDB(object):
         if len(rows) == 0:
             # This is a new issue for this asset
             vulnrow = self.add_vuln_master(v)
-            c.execute('''INSERT INTO assetvulns VALUES (NULL, %d,
-                %s, %d, %f, "%s", "%s")''' % (dbassetid, vulnrow,
+            c.execute('''INSERT INTO assetvulns VALUES (NULL, ?,
+                ?, ?, ?, ?, ?)''', (dbassetid, vulnrow,
                 v.discovered_date_unix, v.age_days, vauto.name,
                 v.proof))
             entrow = c.lastrowid
@@ -353,9 +353,8 @@ class VMIntDB(object):
                 id = %d''' % (v.discovered_date_unix, v.age_days, rows[0][0]))
             self.workflow_check_reset(rows[0][0])
             # Update the proof associated with this issue as reported by Nexpose
-            c.execute('''UPDATE assetvulns SET proof = "%s"
-                WHERE assetvulns.id = %d''' % \
-                (v.proof, rows[0][0]))
+            c.execute('''UPDATE assetvulns SET proof = ?
+                WHERE assetvulns.id = ?''', (v.proof, rows[0][0]))
         self._conn.commit()
 
     def resolve_vulnerability(self, vidlist, dbassetid):
