@@ -22,7 +22,7 @@ class VMIntDB(object):
 
     def add_version(self):
         c = self._conn.cursor()
-        c.execute('''INSERT INTO status VALUES (%d)''' % self.SVER)
+        c.execute('''INSERT INTO status VALUES (?)''', (self.SVER,))
         self._conn.commit()
         
     def create(self):
@@ -84,11 +84,11 @@ class VMIntDB(object):
         if v.cves != None:
             for cve in v.cves:
                 c.execute('''INSERT INTO cves VALUES (NULL,
-                    %s, "%s")''' % (vid, cve))
+                    ?, ?)''', (vid, cve))
         if v.rhsa != None:
             for rhsa in v.rhsa:
                 c.execute('''INSERT INTO rhsas VALUES (NULL,
-                    %s, "%s")''' % (vid, rhsa))
+                    ?, ?)''',(vid, rhsa))
         self._conn.commit()
             
     def expire_hosts(self, foundlist):
@@ -119,9 +119,9 @@ class VMIntDB(object):
             fvid = 0
         else:
             fvid = failvid
-        c.execute('''UPDATE compliance SET failed = %d,
-            lastupdated = %d, failingvid = %d
-            WHERE aid IN (SELECT id FROM assets WHERE uid = "%s")''' % \
+        c.execute('''UPDATE compliance SET failed = ?,
+            lastupdated = ?, failingvid = ?
+            WHERE aid IN (SELECT id FROM assets WHERE uid = ?)''', \
             (failed, int(calendar.timegm(time.gmtime())), fvid, uid))
         self._conn.commit()
 
@@ -135,20 +135,19 @@ class VMIntDB(object):
         c.execute('''SELECT assetvulns.id, vulns.cvss, assetvulns.age
             FROM assetvulns JOIN vulns ON assetvulns.vid = vulns.id
             JOIN assets ON assetvulns.aid = assets.id
-            WHERE assets.uid = "%s"''' % uid)
+            WHERE assets.uid = ?''', (uid,))
         rows = c.fetchall()
         return rows
 
     def workflow_handled(self, wfid, flag):
         c = self._conn.cursor()
-        c.execute('''UPDATE workflow SET status = %d, lasthandled = %d
-            WHERE id = %d''' % (flag, 
-            int(calendar.timegm(time.gmtime())), wfid))
+        c.execute('''UPDATE workflow SET status = ?, lasthandled = ?
+            WHERE id = ?''', (flag, int(calendar.timegm(time.gmtime())), wfid))
         self._conn.commit()
 
     def aid_to_host(self, aid):
         c = self._conn.cursor()
-        c.execute('''SELECT hostname FROM assets WHERE id = %d''' % aid)
+        c.execute('''SELECT hostname FROM assets WHERE id = ?''', (aid,))
         rows = c.fetchall()
         if len(rows) == 0:
             return None
@@ -167,7 +166,7 @@ class VMIntDB(object):
             JOIN assetvulns ON (compliance.failingvid = assetvulns.id
             AND assets.id = assetvulns.aid)
             JOIN vulns ON (assetvulns.vid = vulns.id)
-            WHERE assets.id = %d''' % aid)
+            WHERE assets.id = ?''', (aid,))
         rows = c.fetchall()
 
         if len(rows) == 0:
@@ -210,7 +209,7 @@ class VMIntDB(object):
             JOIN assets ON assets.id = assetvulns.aid
             JOIN vulns ON vulns.id = assetvulns.vid
             JOIN workflow ON assetvulns.id = workflow.vid
-            WHERE assets.id = %d''' % aid)
+            WHERE assets.id = ?''', (aid,))
         rows = c.fetchall()
 
         ret = []
@@ -273,10 +272,10 @@ class VMIntDB(object):
 
         debug.printd('removing database asset id %d' % assetid)
         c.execute('''DELETE FROM workflow WHERE vid IN
-            (SELECT id FROM assetvulns WHERE aid = %d)''' % assetid)
-        c.execute('''DELETE FROM assetvulns WHERE aid = %d''' % assetid)
-        c.execute('''DELETE FROM compliance WHERE aid = %d''' % assetid)
-        c.execute('''DELETE FROM assets WHERE id = %d''' % assetid)
+            (SELECT id FROM assetvulns WHERE aid = ?)''', (assetid,))
+        c.execute('''DELETE FROM assetvulns WHERE aid = ?''', (assetid,))
+        c.execute('''DELETE FROM compliance WHERE aid = ?''', (assetid,))
+        c.execute('''DELETE FROM assets WHERE id = ?''', (assetid,))
         self._conn.commit()
 
     def add_vuln_master(self, v):
@@ -293,13 +292,13 @@ class VMIntDB(object):
 
         try:
             c.execute('''INSERT INTO vulns VALUES (NULL,
-                %s, "%s", %f, %d, %d, "%s", "%s")''' % (v.vid, v.title,
+                ?, ?, ?, ?, ?, ?, ?)''', (v.vid, v.title,
                 v.cvss, exf, mwf, v.description, v.cvss_vector))
         except sqlite3.IntegrityError:
             exists = True
  
         if exists:
-            c.execute('''SELECT id FROM vulns WHERE nxvid=%s''' % v.vid)
+            c.execute('''SELECT id FROM vulns WHERE nxvid = ?''', (v.vid,))
             rows = c.fetchall()
             if len(rows) == 0:
                 raise Exception('fatal error requesting vulns entry')
@@ -318,7 +317,7 @@ class VMIntDB(object):
         c = self._conn.cursor()
 
         c.execute('''SELECT status FROM workflow
-            WHERE vid = %d''' % vid)
+            WHERE vid = ?''', (vid,))
         rows = c.fetchall()
         if len(rows) == 0:
             return
@@ -326,7 +325,7 @@ class VMIntDB(object):
         if sts == vuln.WorkflowElement.STATUS_RESOLVED or \
             sts == vuln.WorkflowElement.STATUS_CLOSED:
             c.execute('''UPDATE workflow SET status = 0
-                WHERE vid = %d''' % vid)
+                WHERE vid = ?''', (vid,))
             debug.printd('reset status on vid %d' % vid)
 
     def add_vulnerability(self, v, dbassetid, vauto):
@@ -334,7 +333,7 @@ class VMIntDB(object):
 
         c.execute('''SELECT assetvulns.id FROM assetvulns
             JOIN vulns on assetvulns.vid = vulns.id
-            WHERE vulns.nxvid = %s AND assetvulns.aid = %d''' % \
+            WHERE vulns.nxvid = ? AND assetvulns.aid = ?''', \
             (v.vid, dbassetid))
         rows = c.fetchall()
         if len(rows) == 0:
@@ -345,12 +344,12 @@ class VMIntDB(object):
                 v.discovered_date_unix, v.age_days, vauto.name,
                 v.proof))
             entrow = c.lastrowid
-            c.execute('''INSERT INTO workflow VALUES (NULL, %s,
-                0, %d, 0)''' % (entrow, int(calendar.timegm(time.gmtime()))))
+            c.execute('''INSERT INTO workflow VALUES (NULL, ?,
+                0, ?, 0)''', (entrow, int(calendar.timegm(time.gmtime()))))
         else:
-            c.execute('''UPDATE assetvulns SET detected = %d,
-                age = %f WHERE
-                id = %d''' % (v.discovered_date_unix, v.age_days, rows[0][0]))
+            c.execute('''UPDATE assetvulns SET detected = ?,
+                age = ? WHERE
+                id = ?''', (v.discovered_date_unix, v.age_days, rows[0][0]))
             self.workflow_check_reset(rows[0][0])
             # Update the proof associated with this issue as reported by Nexpose
             c.execute('''UPDATE assetvulns SET proof = ?
@@ -362,7 +361,7 @@ class VMIntDB(object):
 
         c.execute('''SELECT vulns.nxvid, assetvulns.id FROM vulns
             JOIN assetvulns ON vulns.id = assetvulns.vid WHERE
-            assetvulns.aid = %d''' % dbassetid)
+            assetvulns.aid = ?''', (dbassetid,))
         rows = c.fetchall()
 
         for i in rows:
@@ -370,8 +369,8 @@ class VMIntDB(object):
                 continue
             # We previously knew about the vulnerability on the device
             # and it's not there anymore, mark it as resolved
-            c.execute('''UPDATE workflow SET status = %d
-                WHERE vid = %d''' % (vuln.WorkflowElement.STATUS_RESOLVED,
+            c.execute('''UPDATE workflow SET status = ?
+                WHERE vid = ?''', (vuln.WorkflowElement.STATUS_RESOLVED,
                 i[1]))
 
     def asset_duplicate_resolver(self, uid):
@@ -381,7 +380,7 @@ class VMIntDB(object):
         uidel[1] = '%'
         searchuid = '|'.join(uidel)
         c = self._conn.cursor()
-        c.execute('''SELECT id FROM assets WHERE uid LIKE "%s"''' % searchuid)
+        c.execute('''SELECT id FROM assets WHERE uid LIKE ?''', (searchuid,))
         rows = c.fetchall()
         return [x[0] for x in rows]
 
@@ -406,7 +405,7 @@ class VMIntDB(object):
 
     def add_asset(self, uid, aid, address, mac, hostname):
         c = self._conn.cursor()
-        c.execute('''SELECT id FROM assets WHERE uid="%s"''' % uid)
+        c.execute('''SELECT id FROM assets WHERE uid = ?''', (uid,))
         rows = c.fetchall()
         if len(rows) == 0:
             # Before we add the asset, make sure this isn't a duplicate being
@@ -414,12 +413,12 @@ class VMIntDB(object):
             if len(self.asset_duplicate_resolver(uid)) != 0:
                 debug.printd('aid %d looks like a duplicate, ignoring' % aid)
                 return None
-            c.execute('''INSERT INTO assets VALUES (NULL, "%s", %d,
-                "%s", "%s", "%s")''' % (uid, aid, address, hostname, mac))
+            c.execute('''INSERT INTO assets VALUES (NULL, ?, ?,
+                ?, ?, ?)''', (uid, aid, address, hostname, mac))
             ret = c.lastrowid
             # We also want a compliance tracking item for each asset
-            c.execute('''INSERT INTO compliance VALUES (NULL, %d, 0,
-                NULL, 0, 0)''' % ret)
+            c.execute('''INSERT INTO compliance VALUES (NULL, ?, 0,
+                NULL, 0, 0)''', (ret,))
             self._conn.commit()
             return ret
         else:
