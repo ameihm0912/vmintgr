@@ -22,8 +22,8 @@ class VMConfig(object):
         self.sql_path = None
         self.logfile = None
         self.srcname = None
-        self.mozdef_compliance_url = None
-        self.mozdef_vuln_url = None
+        self.mozdef_compliance_urls = None
+        self.mozdef_vuln_urls = None
         self.mozdef_send_description = False
         self.compliance_url = None
         self.compliance_link = None
@@ -162,9 +162,9 @@ class VMConfig(object):
         elif k == 'sourcename':
             self.srcname = v
         elif k == 'mozdef_compliance':
-            self.mozdef_compliance_url = v
+            self.mozdef_compliance_urls = v.split()
         elif k == 'mozdef_vuln':
-            self.mozdef_vuln_url = v
+            self.mozdef_vuln_urls = v.split()
         elif k == 'dbbackup':
             self.dbbackup = v
         elif k == 'logfile':
