@@ -79,6 +79,16 @@ def wf_to_json(w):
 
     return json.dumps(ret)
 
+def ce_add_group_tags(w, j):
+    j['tags']['team'] = w.failvuln.autogroup
+
+    if w.failvuln.autogroup == 'releng':
+        j['tags']['operator'] = 'releng'
+    else:
+        j['tags']['operator'] = 'it'
+
+    return j
+
 def ce_to_json(w, target):
     ret = {}
 
@@ -98,6 +108,10 @@ def ce_to_json(w, target):
     ret['check']['test']['name'] = 'vulnerability scan'
     ret['check']['test']['type'] = 'nexpose'
     ret['check']['test']['value'] = 'nexpose'
+    
+    ret['tags'] = {}
+    if w != None:
+        ret = ce_add_group_tags(w, ret)
 
     if w == None:
         ret['compliance'] = True

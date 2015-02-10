@@ -160,7 +160,7 @@ class VMIntDB(object):
             assets.ip, assets.hostname, assets.mac,
             compliance.lastupdated, compliance.failed,
             vulns.nxvid, vulns.title, vulns.cvss,
-            assetvulns.age
+            assetvulns.age, assetvulns.autogroup
             FROM assets
             JOIN compliance ON assets.id = compliance.aid
             JOIN assetvulns ON (compliance.failingvid = assetvulns.id
@@ -191,6 +191,7 @@ class VMIntDB(object):
         v.age_days = i['age']
         v.title = i['title'].encode('ascii', 'ignore')
         v.cvss = i['cvss']
+        v.autogroup = i['autogroup']
         ce.failvuln = v
 
         return ce
