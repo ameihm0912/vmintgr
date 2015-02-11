@@ -5,6 +5,7 @@
 import sys
 
 import debug
+import nexadhoc
 
 def asset_gid_scan_set(scanner, gid, window_start, window_end):
     squery = '''
@@ -20,4 +21,4 @@ def asset_gid_scan_set(scanner, gid, window_start, window_end):
         return
 
     debug.printd('building asset gid scan set')
-    ret = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.3.2')

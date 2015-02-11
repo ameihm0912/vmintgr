@@ -31,6 +31,7 @@ import netaddr
 import libvmintgr.debug as debug
 import libvmintgr.vuln as vuln
 import libvmintgr.exempt as exempt
+import libvmintgr.nexadhoc as nexadhoc
 
 sys.path.append('../../pnexpose')
 import pnexpose
@@ -170,7 +171,7 @@ def reptest(scanner):
     if len(sites) == 0:
         return
 
-    ret = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.3.2')
     print(ret)
     sys.exit(0)
 
@@ -191,7 +192,7 @@ def add_asset_properties(scanner):
     if len(sites) == 0:
         return
 
-    vulndata = scanner.conn.adhoc_report(squery, sites,
+    vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
         api_version='1.3.2')
 
     reader = csv.reader(StringIO.StringIO(vulndata))
@@ -239,7 +240,8 @@ def vuln_get_age_data(scanner):
     if len(sites) == 0:
         return
 
-    vulndata = scanner.conn.adhoc_report(squery, sites, api_version='1.3.2')
+    vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
+        api_version='1.3.2')
     reader = csv.reader(StringIO.StringIO(vulndata))
     for i in reader:
         if len(i) == 0:
@@ -306,7 +308,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
         vulndata = fd.read()
         fd.close()
     else:
-        vulndata = scanner.conn.adhoc_report(squery, sites,
+        vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
             api_version='1.3.2')
 
     if writefile != None:
