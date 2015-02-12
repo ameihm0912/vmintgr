@@ -5,6 +5,8 @@ import getopt
 import datetime
 import pytz
 
+import dateutil.parser
+
 from libvmintgr import nexpose
 from libvmintgr import debug
 from libvmintgr import config
@@ -19,9 +21,11 @@ def usage():
             '\n' \
             '\t-C\t\tEnable adhoc query cache\n' \
             '\t-d\t\tEnable debugging\n' \
+            '\t-e time\t\tSpecify end of statistics window\n' \
             '\t-f path\t\tPath to configuration file\n' \
             '\t-g group\tReport on asset group ID\n' \
-            '\t-h\t\tUsage\n')
+            '\t-h\t\tUsage\n' \
+            '\t-s time\t\tSpecify start of statistics window\n')
 
 def group_tac(gid, window_start, window_end):
     nexpose.site_extraction(scanner)
@@ -33,13 +37,12 @@ def domain():
     global scanner
     confpath = None
     repgid = None
-    # XXX For now just trend over a period of 31 days, this should be made
-    # more flexible in the future (allow a start and end date to be supplied)
+    # Default to a 31 day window.
     window_end = pytz.timezone('UTC').localize(datetime.datetime.utcnow())
     window_start = window_end - datetime.timedelta(days=31)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Cdhf:g:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Cde:hf:g:s:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -52,10 +55,16 @@ def domain():
             nexadhoc.nexpose_adhoc_cache(True)
         elif o == '-d':
             debug.setdebugging(True)
+        elif o == '-e':
+            window_end = dateutil.parser.parse(a)
+            window_end = window_end.replace(tzinfo=dateutil.tz.tzutc())
         elif o == '-f':
             confpath = a
         elif o == '-g':
             repgid = a
+        elif o == '-s':
+            window_start = dateutil.parser.parse(a)
+            window_start = window_start.replace(tzinfo=dateutil.tz.tzutc())
 
     if repgid == None:
         sys.stderr.write('must specify reporting group id with -g\n')
