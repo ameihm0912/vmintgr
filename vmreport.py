@@ -9,6 +9,7 @@ from libvmintgr import nexpose
 from libvmintgr import debug
 from libvmintgr import config
 from libvmintgr import nexrep
+from libvmintgr import nexadhoc
 
 vmconfig = None
 scanner = None
@@ -16,6 +17,7 @@ scanner = None
 def usage():
     sys.stdout.write('usage: vmreport.py [-dh] [-f path] [-g group]\n' \
             '\n' \
+            '\t-C\t\tEnable adhoc query cache\n' \
             '\t-d\t\tEnable debugging\n' \
             '\t-f path\t\tPath to configuration file\n' \
             '\t-g group\tReport on asset group ID\n' \
@@ -37,7 +39,7 @@ def domain():
     window_start = window_end - datetime.timedelta(days=31)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'dhf:g:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Cdhf:g:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -46,6 +48,8 @@ def domain():
         if o == '-h':
             usage()
             sys.exit(0)
+        elif o == '-C':
+            nexadhoc.nexpose_adhoc_cache(True)
         elif o == '-d':
             debug.setdebugging(True)
         elif o == '-f':
