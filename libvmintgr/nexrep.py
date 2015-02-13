@@ -13,9 +13,9 @@ def aid_where(assetset):
     ws = None
     for i in assetset:
         if ws == None:
-            ws = '(assetid = %s' % i
+            ws = '(asset_id = %s' % i
         else:
-            ws += ' OR assetid = %s' % i
+            ws += ' OR asset_id = %s' % i
     ws += ')'
     return ws
 
@@ -38,12 +38,13 @@ def vulns_at_period(scanner, assetset, period):
     WITH asset_scan_map AS (
     SELECT asset_id, scanAsOf(asset_id, '%s') as scan_id
     FROM dim_asset
+    WHERE %s
     )
     SELECT asset_id, scan_id, vulnerability_id FROM
     fact_asset_scan_vulnerability_finding
     WHERE scan_id IN (SELECT scan_id FROM asset_scan_map) AND
     asset_id IN (SELECT asset_id FROM asset_scan_map)
-    ''' % period
+    ''' % (period, aid_where(assetset))
 
     sites = scanner.sitelist.keys()
     if len(sites) == 0:
