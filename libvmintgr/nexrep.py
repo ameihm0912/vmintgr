@@ -14,7 +14,7 @@ import nexadhoc
 def scan_scope(scanner, gid):
     sites = scanner.sitelist.keys()
     if len(sites) == 0:
-        return
+        return []
 
     squery = '''
     WITH applicable_assets AS (
@@ -44,7 +44,7 @@ def scan_scope(scanner, gid):
 def device_scope(scanner, gid):
     sites = scanner.sitelist.keys()
     if len(sites) == 0:
-        return
+        return []
 
     squery = '''
     SELECT asset_id FROM dim_asset_group_asset
@@ -80,12 +80,21 @@ def cs_abyi(scanner, gid, timestamp, scanscope, devicescope):
     ),
     state_snapshot AS (
     SELECT asset_id, scan_id, vulnerability_id,
-    round(dv.cvss_score::numeric, 2) AS cvss_score
+    round(dv.cvss_score::numeric, 2) AS cvss_score,
+    date
     FROM fact_asset_scan_vulnerability_instance
     JOIN asset_scan_map USING (asset_id, scan_id)
     JOIN dim_vulnerability dv USING (vulnerability_id)
+    ),
+    vuln_age AS (
+    SELECT fasvi.asset_id, fasvi.vulnerability_id,
+    MIN(fasvi.date) as earliest,
+    ss.date AS latest
+    FROM fact_asset_scan_vulnerability_instance as fasvi
+    JOIN state_snapshot AS ss USING (asset_id, vulnerability_id)
+    GROUP BY fasvi.asset_id, fasvi.vulnerability_id, ss.date
     )
-    SELECT * FROM state_snapshot
+    SELECT * FROM vuln_age
     ''' % (gid, timestamp)
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
@@ -130,3 +139,5 @@ def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
 def current_state_summary(scanner, gid, window_end, scanscope, devicescope):
     cs_vbyi(scanner, gid, window_end, scanscope, devicescope)
     cs_abyi(scanner, gid, window_end, scanscope, devicescope)
+
+    return None
