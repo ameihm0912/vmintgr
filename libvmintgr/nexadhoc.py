@@ -30,7 +30,8 @@ def write_cache(cachefn, s):
     fd.write(s)
     fd.close()
 
-def nexpose_adhoc(scanner, squery, sites, api_version=None, cache_key=None):
+def nexpose_adhoc(scanner, squery, sites, api_version=None, cache_key=None,
+    scan_ids=[]):
     if cache_key == None:
         cache_key = get_cache_key(squery)
     cachefn = './adhoc.' + cache_key
@@ -46,9 +47,9 @@ def nexpose_adhoc(scanner, squery, sites, api_version=None, cache_key=None):
     ret = None
     if api_version != None:
         ret = scanner.conn.adhoc_report(squery, sites,
-            api_version=api_version)
+            api_version=api_version, scan_ids=scan_ids)
     else:
-        ret = scanner.conn.adhoc_report(squery, sites)
+        ret = scanner.conn.adhoc_report(squery, sites, scan_ids=scan_ids)
     if adhoc_cache:
         debug.printd('writing cache to %s' % cachefn)
         write_cache(cachefn, ret)

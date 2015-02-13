@@ -9,8 +9,64 @@ import StringIO
 import debug
 import nexadhoc
 
+def aid_where(assetset):
+    ws = None
+    for i in assetset:
+        if ws == None:
+            ws = '(assetid = %s' % i
+        else:
+            ws += ' OR assetid = %s' % i
+    ws += ')'
+    return ws
+
+def applicable_scans(scanner, assetset):
+    ret = []
+    for i in assetset:
+        buf = assetset[i]
+        if buf['start'][0] not in ret:
+            ret.append(buf['start'][0])
+        if buf['end'][0] not in ret:
+            ret.append(buf['end'][0])
+    return ret
+
+def current_state_summary(scanner, assetset, window_end):
+    buf = vulns_at_period(scanner, assetset, window_end)
+    print buf
+
+def vulns_at_period(scanner, assetset, period):
+    squery = '''
+    WITH asset_scan_map AS (
+    SELECT asset_id, scanAsOf(asset_id, '%s') as scan_id
+    FROM dim_asset
+    )
+    SELECT asset_id, scan_id, vulnerability_id FROM
+    fact_asset_scan_vulnerability_finding
+    WHERE scan_id IN (SELECT scan_id FROM asset_scan_map) AND
+    asset_id IN (SELECT asset_id FROM asset_scan_map)
+    ''' % period
+
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    appscans = applicable_scans(scanner, assetset)
+
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, \
+        api_version='1.4.0', scan_ids=appscans)
+    return ret
+
 def vuln_extract_asset_set(scanner, assetset):
-    pass
+    scans = []
+    for i in assetset:
+        buf = assetset[i]
+        if buf['start'][0] not in scans:
+            scans.append(buf['start'][0])
+        if buf['end'][0] not in scans:
+            scans.append(buf['end'][0])
+    debug.printd('need data from %d scans' % len(scans))
+    ret = {}
+    for i in scans:
+        vuln_scan_extract(scanner, assetset, ret, i)
 
 def asset_gid_scan_set(scanner, gid, window_start, window_end):
     squery = '''

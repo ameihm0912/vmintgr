@@ -31,7 +31,7 @@ def group_tac(gid, window_start, window_end):
     nexpose.site_extraction(scanner)
     assetset = nexrep.asset_gid_scan_set(scanner, gid, window_start,
         window_end)
-    vulnset = nexrep.vuln_extract_asset_set(scanner, assetset)
+    buf = nexrep.current_state_summary(scanner, assetset, window_end)
 
 def domain():
     global vmconfig
