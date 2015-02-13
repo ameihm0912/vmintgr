@@ -29,9 +29,9 @@ def usage():
 
 def group_tac(gid, window_start, window_end):
     nexpose.site_extraction(scanner)
-    assetset = nexrep.asset_gid_scan_set(scanner, gid, window_start,
-        window_end)
-    buf = nexrep.current_state_summary(scanner, assetset, window_end)
+    window_end_scans = nexrep.scan_scope_timestamp(scanner, gid, window_end)
+    buf = nexrep.current_state_summary(scanner, gid, window_end, \
+        window_end_scans)
 
 def domain():
     global vmconfig

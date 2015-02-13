@@ -9,99 +9,75 @@ import StringIO
 import debug
 import nexadhoc
 
-def aid_where(assetset):
-    ws = None
-    for i in assetset:
-        if ws == None:
-            ws = '(asset_id = %s' % i
-        else:
-            ws += ' OR asset_id = %s' % i
-    ws += ')'
-    return ws
+# Given a group ID, return a list of scans that should be taken into
+# consideration based on the results of applying scanAsOf to each asset
+# that is part of that group with the supplied timestamp. This is used
+# to supply scan filter(s) to the adhoc reporting call.
+def scan_scope_timestamp(scanner, gid, timestamp):
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
 
-def applicable_scans(scanner, assetset):
-    ret = []
-    for i in assetset:
-        buf = assetset[i]
-        if buf['start'][0] not in ret:
-            ret.append(buf['start'][0])
-        if buf['end'][0] not in ret:
-            ret.append(buf['end'][0])
-    return ret
-
-def current_state_summary(scanner, assetset, window_end):
-    buf = vulns_at_period(scanner, assetset, window_end)
-    print buf
-
-def vulns_at_period(scanner, assetset, period):
     squery = '''
-    WITH asset_scan_map AS (
+    WITH applicable_assets AS (
+    SELECT asset_id FROM dim_asset_group_asset
+    WHERE asset_group_id = %s
+    )
     SELECT asset_id, scanAsOf(asset_id, '%s') as scan_id
     FROM dim_asset
-    WHERE %s
-    )
-    SELECT asset_id, scan_id, vulnerability_id FROM
-    fact_asset_scan_vulnerability_finding
-    WHERE scan_id IN (SELECT scan_id FROM asset_scan_map) AND
-    asset_id IN (SELECT asset_id FROM asset_scan_map)
-    ''' % (period, aid_where(assetset))
+    WHERE asset_id IN (SELECT asset_id FROM applicable_assets)
+    ''' % (gid, timestamp)
 
-    sites = scanner.sitelist.keys()
-    if len(sites) == 0:
-        return
-
-    appscans = applicable_scans(scanner, assetset)
-
-    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, \
-        api_version='1.4.0', scan_ids=appscans)
-    return ret
-
-def vuln_extract_asset_set(scanner, assetset):
-    scans = []
-    for i in assetset:
-        buf = assetset[i]
-        if buf['start'][0] not in scans:
-            scans.append(buf['start'][0])
-        if buf['end'][0] not in scans:
-            scans.append(buf['end'][0])
-    debug.printd('need data from %d scans' % len(scans))
-    ret = {}
-    for i in scans:
-        vuln_scan_extract(scanner, assetset, ret, i)
-
-def asset_gid_scan_set(scanner, gid, window_start, window_end):
-    squery = '''
-    SELECT asset_id, scan_id, scan_finished
-    FROM fact_asset_date('%s', '%s', INTERVAL '1 day')
-    WHERE asset_id IN
-    (SELECT asset_id FROM dim_asset_group_asset
-    WHERE asset_group_id = %s)
-    ORDER BY scan_finished
-    ''' % (window_start, window_end, gid)
-
-    sites = scanner.sitelist.keys()
-    if len(sites) == 0:
-        return
-
-    debug.printd('building asset gid scan set')
-    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.3.2')
-    reader = csv.reader(StringIO.StringIO(ret))
-    amap = {}
+    buf = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.4.0')
+    ret = []
+    reader = csv.reader(StringIO.StringIO(buf))
     for i in reader:
+        if i == None or len(i) == 0:
+            break
         if i[0] == 'asset_id':
             continue
-        aid = i[0]
-        if aid not in amap:
-            amap[aid] = []
-        amap[aid].append((i[1], i[2]))
-
-    ret = {}
-    # For each asset, we want to earliest and latest scan
-    for i in amap:
-        if i not in ret:
-            ret[i] = {}
-        ret[i]['start'] = amap[i][0]
-        ret[i]['end'] = amap[i][-1]
-
-    debug.printd('returning %d assets in asset set' % len(ret.keys()))
+        if i[1] == '':
+            debug.printd('notice: no scan id for asset %s' % i[0])
+            continue
+        if i[1] not in ret:
+            ret.append(i[1])
     return ret
+
+def cs_vbyi(scanner, gid, timestamp, scanscope):
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    squery = '''
+    WITH applicable_assets AS (
+    SELECT asset_id FROM dim_asset_group_asset
+    WHERE asset_group_id = %s
+    ),
+    asset_scan_map AS (
+    SELECT asset_id, scanAsOf(asset_id, '%s') as scan_id
+    FROM dim_asset
+    WHERE asset_id IN (SELECT asset_id FROM applicable_assets)
+    ),
+    state_snapshot AS (
+    SELECT asset_id, scan_id, vulnerability_id,
+    round(dv.cvss_score::numeric, 2) AS cvss_score
+    FROM fact_asset_vulnerability_instance
+    JOIN asset_scan_map USING (asset_id, scan_id)
+    JOIN dim_vulnerability dv USING (vulnerability_id)
+    )
+    SELECT
+    SUM(CASE WHEN cvss_score >= 9 THEN 1 ELSE 0 END) AS "maximum",
+    SUM(CASE WHEN (cvss_score >= 7 AND cvss_score < 9) THEN 1 ELSE 0 END) AS
+    "high",
+    SUM(CASE WHEN cvss_score < 7 THEN 1 ELSE 0 END) AS "mediumlow",
+    COUNT(*) as "total"
+    FROM state_snapshot
+    ''' % (gid, timestamp)
+
+    debug.printd('scan scope: %s' % scanscope)
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.4.0',
+        scan_ids=scanscope)
+    print ret
+
+def current_state_summary(scanner, gid, window_end, window_end_scans):
+    cs_vbyi(scanner, gid, window_end, window_end_scans)
