@@ -108,6 +108,53 @@ def cs_abyi(scanner, gid, timestamp, scanscope, devicescope):
         scan_ids=scanscope, device_ids=devicescope)
     print ret
 
+def vulns_at_time(scanner, gid, timestamp, scanscope, devicescope):
+    sites = scanner.sitelist.keys()
+    if len(sites) == 0:
+        return
+
+    squery = '''
+    WITH applicable_assets AS (
+    SELECT asset_id FROM dim_asset_group_asset
+    WHERE asset_group_id = %s
+    ),
+    asset_scan_map AS (
+    SELECT asset_id, scanAsOf(asset_id, '%s') as scan_id
+    FROM dim_asset
+    WHERE asset_id IN (SELECT asset_id FROM applicable_assets)
+    ),
+    current_state_snapshot AS (
+    SELECT
+    fasvf.asset_id, da.ip_address, da.host_name,
+    fasvf.date AS discovered_date,
+    fasvf.vulnerability_id,
+    dv.title AS vulnerability,
+    round(dv.cvss_score::numeric, 2) AS cvss_score
+    FROM fact_asset_scan_vulnerability_finding fasvf
+    JOIN dim_asset da USING (asset_id)
+    JOIN dim_vulnerability dv USING (vulnerability_id)
+    JOIN asset_scan_map USING (asset_id, scan_id)
+    ),
+    issue_age AS (
+    SELECT
+    fasvf.asset_id, fasvf.vulnerability_id,
+    MIN(fasvf.date) as earliest
+    FROM fact_asset_scan_vulnerability_finding fasvf
+    JOIN current_state_snapshot css USING (asset_id, vulnerability_id)
+    GROUP BY asset_id, vulnerability_id
+    )
+    SELECT asset_id, ip_address, host_name, discovered_date,
+    vulnerability_id, vulnerability, cvss_score,
+    iage.earliest,
+    EXTRACT(EPOCH FROM (discovered_date - iage.earliest))
+    FROM current_state_snapshot
+    JOIN issue_age iage USING (asset_id, vulnerability_id)
+    ''' % (gid, timestamp)
+
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
+     scan_ids=scanscope, device_ids=devicescope)
+    print ret
+
 def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
     sites = scanner.sitelist.keys()
     if len(sites) == 0:
@@ -144,7 +191,8 @@ def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
     print ret
 
 def current_state_summary(scanner, gid, window_end, scanscope, devicescope):
-    cs_vbyi(scanner, gid, window_end, scanscope, devicescope)
-    cs_abyi(scanner, gid, window_end, scanscope, devicescope)
+    #cs_vbyi(scanner, gid, window_end, scanscope, devicescope)
+    #cs_abyi(scanner, gid, window_end, scanscope, devicescope)
+    vulns_at_time(scanner, gid, window_end, scanscope, devicescope)
 
     return None
