@@ -89,12 +89,19 @@ def cs_abyi(scanner, gid, timestamp, scanscope, devicescope):
     vuln_age AS (
     SELECT fasvi.asset_id, fasvi.vulnerability_id,
     MIN(fasvi.date) as earliest,
-    ss.date AS latest
+    ss.date AS latest,
+    (CASE WHEN cvss_score >= 9 THEN 'maximum'
+    WHEN (cvss_score >= 7 AND cvss_score < 9) THEN 'high'
+    ELSE 'mediumlow' END) as impact
     FROM fact_asset_scan_vulnerability_instance as fasvi
     JOIN state_snapshot AS ss USING (asset_id, vulnerability_id)
-    GROUP BY fasvi.asset_id, fasvi.vulnerability_id, ss.date
+    GROUP BY fasvi.asset_id, fasvi.vulnerability_id, ss.date,
+    ss.cvss_score
     )
-    SELECT * FROM vuln_age
+    SELECT
+    impact,
+    AVG(EXTRACT(EPOCH FROM (latest - earliest)))
+    FROM vuln_age GROUP BY impact
     ''' % (gid, timestamp)
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
