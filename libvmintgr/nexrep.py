@@ -98,7 +98,7 @@ def cs_abyi(scanner, gid, timestamp, scanscope, devicescope):
     ''' % (gid, timestamp)
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
-        scan_ids=scanscope)
+        scan_ids=scanscope, device_ids=devicescope)
     print ret
 
 def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
@@ -133,7 +133,7 @@ def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
     ''' % (gid, timestamp)
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
-     scan_ids=scanscope)
+     scan_ids=scanscope, device_ids=devicescope)
     print ret
 
 def current_state_summary(scanner, gid, window_end, scanscope, devicescope):
