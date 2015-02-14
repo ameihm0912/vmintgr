@@ -5,8 +5,11 @@
 import sys
 import csv
 import StringIO
+import datetime
+import pytz
 
 import debug
+import vuln
 import nexadhoc
 
 # Given a group ID, return a list of scans that should be taken into
@@ -153,7 +156,41 @@ def vulns_at_time(scanner, gid, timestamp, scanscope, devicescope):
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
      scan_ids=scanscope, device_ids=devicescope)
-    print ret
+    reader = csv.reader(StringIO.StringIO(ret))
+    vulnret = {}
+    cnt = 0
+    for i in reader:
+        if i == None or len(i) == 0:
+            continue
+        if i[0] == 'asset_id':
+            continue
+        newvuln = vuln.vulnerability()
+        newvuln.assetid = int(i[0])
+        newvuln.ipaddr = i[1]
+        newvuln.hostname = i[2]
+
+        idx = i[3].find('.')
+        if idx > 0:
+            dstr = i[3][:idx]
+        else:
+            dstr = i[3]
+        dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+        dt = dt.replace(tzinfo=pytz.UTC)
+        newvuln.discovered_date = dt
+
+        newvuln.vid = i[4]
+        newvuln.title = i[5]
+        newvuln.cvss = float(i[6])
+        newvuln.age_days = float(i[8]) / 60 / 60 / 24
+
+        if newvuln.assetid not in vulnret:
+            vulnret[newvuln.assetid] = []
+        vulnret[newvuln.assetid].append(newvuln)
+        cnt += 1
+
+    debug.printd('vulns_at_time: %s: returning %d issues for %d assets' % \
+        (timestamp, cnt, len(vulnret.keys())))
+    return vulnret
 
 def cs_vbyi(scanner, gid, timestamp, scanscope, devicescope):
     sites = scanner.sitelist.keys()
