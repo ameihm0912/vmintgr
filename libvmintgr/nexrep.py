@@ -17,8 +17,15 @@ device_filter = None
 class VMDataSet(object):
     def __init__(self):
         self.current_state = None
+        self.current_compliance = None
+
         self.previous_states = []
+        self.previous_compliance = []
+
         self.hist = None
+
+def risk_summary(vmd):
+    pass
 
 def populate_query_filters(scanner, gid):
     populate_device_filter(scanner, gid)
@@ -200,6 +207,34 @@ def vulns_at_time(scanner, gid, timestamp):
         (timestamp, cnt, len(vulnret.keys())))
     return vulnret
 
+def vmd_compliance(vlist):
+    # Create a compliance element for each finding in the list. failvuln
+    # is used to point to the associated issue here, and the failed flag
+    # is set on any failures.
+    ret = []
+    failcnt = 0
+    for a in vlist:
+        for v in vlist[a]:
+            newcomp = vuln.ComplianceElement()
+            newcomp.failed = False
+            newcomp.failvuln = v
+            for level in vuln.ComplianceLevels.ORDERING:
+                if v.cvss >= vuln.ComplianceLevels.FLOOR[level] and \
+                    v.age_days > vuln.ComplianceLevels.LEVELS[level]:
+                    newcomp.failed = True
+                    failcnt += 1
+                    break
+            ret.append(newcomp)
+    debug.printd('vmd_compliance returning %d elements (%d failed)' \
+        % (len(ret), failcnt))
+
+def dataset_compliance(vmd):
+    debug.printd('calculating current state compliance...')
+    vmd.current_compliance = vmd_compliance(vmd.current_state)
+    debug.printd('calculating previous state compliance...')
+    for i in vmd.previous_states:
+        vmd.previous_compliance.append(vmd_compliance(i))
+
 def dataset_fetch(scanner, gid, window_start, window_end):
     vmd = VMDataSet()
 
@@ -221,6 +256,8 @@ def dataset_fetch(scanner, gid, window_start, window_end):
     debug.printd('fetching historical findings from %s to %s' % \
         (trend_start, window_end))
     vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
+
+    dataset_compliance(vmd)
 
     return vmd
 
