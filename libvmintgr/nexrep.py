@@ -17,10 +17,12 @@ device_filter = None
 class VMDataSet(object):
     def __init__(self):
         self.current_state = None
+        self.current_statestat = None
         self.current_compliance = None
-        self.current_compstat = None
+        self.current_compstat = {}
 
         self.previous_states = []
+        self.previous_statstat = []
         self.previous_compliance = []
         self.previous_compstat = []
 
@@ -234,10 +236,9 @@ def vmd_compliance(vlist):
 def compliance_count(compset):
     ret = {}
 
-    ret['passfailcount'] = {}
-    ret['passfailcount']['maximum'] = {'pass': 0, 'fail': 0}
-    ret['passfailcount']['high'] = {'pass': 0, 'fail': 0}
-    ret['passfailcount']['mediumlow'] = {'pass': 0, 'fail': 0}
+    ret['maximum'] = {'pass': 0, 'fail': 0}
+    ret['high'] = {'pass': 0, 'fail': 0}
+    ret['mediumlow'] = {'pass': 0, 'fail': 0}
     for i in compset:
         if i.failvuln.cvss >= 9:
             tag = 'maximum'
@@ -246,16 +247,22 @@ def compliance_count(compset):
         else:
             tag = 'mediumlow'
         if i.failed:
-            ret['passfailcount'][tag]['fail'] += 1
+            ret[tag]['fail'] += 1
         else:
-            ret['passfailcount'][tag]['pass'] += 1
+            ret[tag]['pass'] += 1
     return ret
+
+def dataset_statestat(vmd):
+    debug.printd('summarizing state statistics...')
 
 def dataset_compstat(vmd):
     debug.printd('summarizing compliance statistics...')
-    vmd.current_compstat = compliance_count(vmd.current_compliance)
+    vmd.current_compstat['passfailcount'] = \
+        compliance_count(vmd.current_compliance)
     for i in vmd.previous_compliance:
-        vmd.previous_compstat.append(compliance_count(i))
+        newval = {}
+        newval['passfailcount'] = compliance_count(i)
+        vmd.previous_compstat.append(newval)
 
 def dataset_compliance(vmd):
     debug.printd('calculating current state compliance...')
@@ -285,6 +292,8 @@ def dataset_fetch(scanner, gid, window_start, window_end):
     debug.printd('fetching historical findings from %s to %s' % \
         (trend_start, window_end))
     vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
+
+    dataset_statestat(vmd)
 
     dataset_compliance(vmd)
     dataset_compstat(vmd)
