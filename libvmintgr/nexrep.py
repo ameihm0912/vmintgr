@@ -14,6 +14,12 @@ import nexadhoc
 
 device_filter = None
 
+class VMDataSet(object):
+    def __init__(self):
+        self.current_state = None
+        self.previous_states = []
+        self.hist = None
+
 def populate_query_filters(scanner, gid):
     populate_device_filter(scanner, gid)
 
@@ -69,6 +75,53 @@ def vulns_over_time(scanner, gid, start, end):
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2',
         device_ids=device_filter)
+    reader = csv.reader(StringIO.StringIO(ret))
+    vulnret = {}
+    cnt = 0
+    for i in reader:
+        if i == None or len(i) == 0:
+            continue
+        if i[0] == 'asset_id':
+            continue
+        newvuln = vuln.vulnerability()
+        newvuln.assetid = int(i[0])
+        newvuln.ipaddr = i[1]
+        newvuln.hostname = i[2]
+        newvuln.vid = i[5]
+        newvuln.title = i[6]
+        newvuln.cvss = float(i[7])
+
+
+        idx = i[3].find('.')
+        if idx > 0:
+            dstr = i[3][:idx]
+        else:
+            dstr = i[3]
+        dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+        dt = dt.replace(tzinfo=pytz.UTC)
+        first_date = dt
+
+        idx = i[4].find('.')
+        if idx > 0:
+            dstr = i[4][:idx]
+        else:
+            dstr = i[4]
+        dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
+        dt = dt.replace(tzinfo=pytz.UTC)
+        last_date = dt
+
+        if newvuln.assetid not in vulnret:
+            vulnret[newvuln.assetid] = {}
+        newfinding = {}
+        newfinding['vulnerability'] = newvuln
+        newfinding['first_date'] = first_date
+        newfinding['last_date'] = last_date
+        vulnret[newvuln.assetid][newvuln.vid] = newfinding
+        cnt += 1
+
+    debug.printd('vulns_over_time: returning %d issues from %s to %s' % \
+        (cnt, start, end))
+    return vulnret
 
 def vulns_at_time(scanner, gid, timestamp):
     squery = '''
@@ -148,6 +201,26 @@ def vulns_at_time(scanner, gid, timestamp):
     return vulnret
 
 def dataset_fetch(scanner, gid, window_start, window_end):
+    vmd = VMDataSet()
+
+    # Export current state information for the asset group.
     debug.printd('fetching vulnerability data for end of window')
-    vulns_at_time(scanner, gid, window_end)
-    vulns_over_time(scanner, gid, window_start, window_end)
+    vmd.current_state = vulns_at_time(scanner, gid, window_end)
+
+    wndsize = window_end - window_start
+    for i in range(3):
+        wnd_end = window_end - ((i + 1) * wndsize)
+        debug.printd('fetching previous window data (%s)' % wnd_end)
+        vmd.previous_states.append(vulns_at_time(scanner, gid, wnd_end))
+
+    # Grab historical information. We apply 3 extra windows of the specified
+    # size to the query (e.g., if the reporting window is one month we will
+    # query back 3 months. This is primarily to gain enough information to
+    # identify trends.
+    trend_start = window_start - ((window_end - window_start) * 3)
+    debug.printd('fetching historical findings from %s to %s' % \
+        (trend_start, window_end))
+    vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
+
+    return vmd
+

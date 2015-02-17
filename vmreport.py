@@ -29,7 +29,7 @@ def usage():
 
 def group_tac(gid, window_start, window_end):
     nexrep.populate_query_filters(scanner, gid)
-    nexrep.dataset_fetch(scanner, gid, window_start, window_end)
+    vmd = nexrep.dataset_fetch(scanner, gid, window_start, window_end)
 
 def domain():
     global vmconfig
