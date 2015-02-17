@@ -18,9 +18,11 @@ class VMDataSet(object):
     def __init__(self):
         self.current_state = None
         self.current_compliance = None
+        self.current_compstat = None
 
         self.previous_states = []
         self.previous_compliance = []
+        self.previous_compstat = []
 
         self.hist = None
 
@@ -227,6 +229,33 @@ def vmd_compliance(vlist):
             ret.append(newcomp)
     debug.printd('vmd_compliance returning %d elements (%d failed)' \
         % (len(ret), failcnt))
+    return ret
+
+def compliance_count(compset):
+    ret = {}
+
+    ret['passfailcount'] = {}
+    ret['passfailcount']['maximum'] = {'pass': 0, 'fail': 0}
+    ret['passfailcount']['high'] = {'pass': 0, 'fail': 0}
+    ret['passfailcount']['mediumlow'] = {'pass': 0, 'fail': 0}
+    for i in compset:
+        if i.failvuln.cvss >= 9:
+            tag = 'maximum'
+        elif i.failvuln.cvss >= 7 and i.failvuln.cvss < 9:
+            tag = 'high'
+        else:
+            tag = 'mediumlow'
+        if i.failed:
+            ret['passfailcount'][tag]['fail'] += 1
+        else:
+            ret['passfailcount'][tag]['pass'] += 1
+    return ret
+
+def dataset_compstat(vmd):
+    debug.printd('summarizing compliance statistics...')
+    vmd.current_compstat = compliance_count(vmd.current_compliance)
+    for i in vmd.previous_compliance:
+        vmd.previous_compstat.append(compliance_count(i))
 
 def dataset_compliance(vmd):
     debug.printd('calculating current state compliance...')
@@ -258,6 +287,7 @@ def dataset_fetch(scanner, gid, window_start, window_end):
     vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
 
     dataset_compliance(vmd)
+    dataset_compstat(vmd)
 
     return vmd
 
