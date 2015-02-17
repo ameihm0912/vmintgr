@@ -28,11 +28,8 @@ def usage():
             '\t-s time\t\tSpecify start of statistics window\n')
 
 def group_tac(gid, window_start, window_end):
-    nexpose.site_extraction(scanner)
-    scanscope = nexrep.scan_scope(scanner, gid)
-    devicescope = nexrep.device_scope(scanner, gid)
-    buf = nexrep.current_state_summary(scanner, gid, window_end, scanscope,
-        devicescope)
+    nexrep.populate_query_filters(scanner, gid)
+    nexrep.dataset_fetch(scanner, gid, window_start, window_end)
 
 def domain():
     global vmconfig
