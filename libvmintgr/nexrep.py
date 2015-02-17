@@ -274,6 +274,16 @@ def age_average(vulnset):
         / len(setbuf['mediumlow'])
     return ret
 
+def host_impact(vulnset):
+    ret = []
+    for a in vulnset:
+        suma = 0
+        for v in vulnset[a]:
+            suma += v.cvss
+        ret.append({'assetid': a, 'score': suma})
+    ret = sorted(ret, key=lambda k: k['score'], reverse=True)
+    return ret
+
 def node_impact_count(vulnset):
     ret = {'maximum': 0, 'high': 0, 'mediumlow': 0}
     for a in vulnset:
@@ -297,16 +307,21 @@ def dataset_statestat(vmd):
         age_average(vmd.current_state)
     vmd.current_statestat['nodeimpact'] = \
         node_impact_count(vmd.current_state)
+    vmd.current_statestat['hostimpact'] = \
+        host_impact(vmd.current_state)
+
     for i in vmd.previous_states:
         newval = {}
         newval['ageavg'] = age_average(i)
         newval['nodeimpact'] = node_impact_count(i)
+        newval['hostimpact'] = host_impact(i)
         vmd.previous_statestat.append(newval)
 
 def dataset_compstat(vmd):
     debug.printd('summarizing compliance statistics...')
     vmd.current_compstat['passfailcount'] = \
         compliance_count(vmd.current_compliance)
+
     for i in vmd.previous_compliance:
         newval = {}
         newval['passfailcount'] = compliance_count(i)
