@@ -17,12 +17,12 @@ device_filter = None
 class VMDataSet(object):
     def __init__(self):
         self.current_state = None
-        self.current_statestat = None
+        self.current_statestat = {}
         self.current_compliance = None
         self.current_compstat = {}
 
         self.previous_states = []
-        self.previous_statstat = []
+        self.previous_statestat = []
         self.previous_compliance = []
         self.previous_compstat = []
 
@@ -252,8 +252,36 @@ def compliance_count(compset):
             ret[tag]['pass'] += 1
     return ret
 
+def age_average(vulnset):
+    ret = {}
+    setbuf = {'maximum': [], 'high': [], 'mediumlow': []}
+    if len(vulnset) == 0:
+        return None
+    for a in vulnset:
+        for v in vulnset[a]:
+            if v.cvss >= 9:
+                avgset = 'maximum'
+            elif v.cvss >= 7 and v.cvss < 9:
+                avgset = 'high'
+            else:
+                avgset = 'mediumlow'
+            setbuf[avgset].append(v.age_days)
+    ret['maximum'] = reduce(lambda x, y: x + y, setbuf['maximum']) \
+        / len(setbuf['maximum'])
+    ret['high'] = reduce(lambda x, y: x + y, setbuf['high']) \
+        / len(setbuf['high'])
+    ret['mediumlow'] = reduce(lambda x, y: x + y, setbuf['mediumlow']) \
+        / len(setbuf['mediumlow'])
+    return ret
+
 def dataset_statestat(vmd):
     debug.printd('summarizing state statistics...')
+    vmd.current_statestat['ageavg'] = \
+        age_average(vmd.current_state)
+    for i in vmd.previous_states:
+        newval = {}
+        newval['ageavg'] = age_average(i)
+        vmd.previous_statestat.append(newval)
 
 def dataset_compstat(vmd):
     debug.printd('summarizing compliance statistics...')
