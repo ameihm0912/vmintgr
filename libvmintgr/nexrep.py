@@ -274,13 +274,33 @@ def age_average(vulnset):
         / len(setbuf['mediumlow'])
     return ret
 
+def node_impact_count(vulnset):
+    ret = {'maximum': 0, 'high': 0, 'mediumlow': 0}
+    for a in vulnset:
+        maxcvss = 0
+        for v in vulnset[a]:
+            if v.cvss > maxcvss:
+                maxcvss = v.cvss
+        if maxcvss >= 9:
+            cntset = 'maximum'
+        elif maxcvss >= 7 and maxcvss < 9:
+            cntset = 'high'
+        else:
+            cntset = 'mediumlow'
+        if maxcvss > 0:
+            ret[cntset] += 1
+    return ret
+
 def dataset_statestat(vmd):
     debug.printd('summarizing state statistics...')
     vmd.current_statestat['ageavg'] = \
         age_average(vmd.current_state)
+    vmd.current_statestat['nodeimpact'] = \
+        node_impact_count(vmd.current_state)
     for i in vmd.previous_states:
         newval = {}
         newval['ageavg'] = age_average(i)
+        newval['nodeimpact'] = node_impact_count(i)
         vmd.previous_statestat.append(newval)
 
 def dataset_compstat(vmd):
