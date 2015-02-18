@@ -515,6 +515,9 @@ def ascii_output(vmd):
     ascii_res(vmd)
     txtout.write('\n')
     ascii_outside_compliance(vmd, 'maximum')
+    txtout.write('\n')
+    ascii_outside_compliance(vmd, 'high')
+    txtout.write('\n')
 
     txtout.write('Current State Summary\n')
     txtout.write('---------------------\n\n')
@@ -544,7 +547,14 @@ def ascii_output(vmd):
     ascii_vuln_impact(vmd)
 
 def ascii_outside_compliance(vmd, label):
-    pass
+    txtout.write('## Outside Compliance Window (%s)\n' % label)
+    t = Texttable()
+
+    t.add_row(['Title', 'Instances', 'Associated Bugs'])
+    for i in vmd.current_compstat['impactsum'][label]:
+        t.add_row([i['title'], i['count'], 'NA'])
+
+    txtout.write(t.draw() + '\n')
 
 def ascii_vuln_impact(vmd):
     txtout.write('## Top Issues by Impact\n')
