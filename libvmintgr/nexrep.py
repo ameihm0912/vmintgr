@@ -474,6 +474,78 @@ def ascii_output(vmd):
     ascii_compliance_trends(vmd)
     txtout.write('\n')
     ascii_res(vmd)
+    txtout.write('\n')
+
+    txtout.write('Current State Summary\n')
+    txtout.write('---------------------\n\n')
+    ascii_impact_status(vmd)
+    txtout.write('\n')
+    ascii_age_status(vmd)
+    txtout.write('\n')
+    ascii_nodes_impact(vmd)
+    txtout.write('\n')
+
+    txtout.write('Trending\n')
+    txtout.write('--------\n')
+    ascii_impact_trend(vmd)
+
+def ascii_impact_trend(vmd):
+    txtout.write('## Vulnerabilities by Impact over Time\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Current - 2', 'Current - 1', 'Current'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        if len(vmd.previous_compstat) > 1:
+            pc1s = vmd.previous_compstat[1]['passfailcount'][i]['pass'] + \
+                vmd.previous_compstat[1]['passfailcount'][i]['fail']
+        else:
+            pc1s = 'NA'
+
+        if len(vmd.previous_compstat) > 0:
+            pc0s = vmd.previous_compstat[0]['passfailcount'][i]['pass'] + \
+                vmd.previous_compstat[0]['passfailcount'][i]['fail']
+        else:
+            pc0s = 'NA'
+
+        cs = vmd.current_compstat['passfailcount'][i]['pass'] + \
+            vmd.current_compstat['passfailcount'][i]['fail']
+
+        t.add_row([i, pc1s, pc0s, cs])
+
+    txtout.write(t.draw() + '\n')
+
+def ascii_impact_status(vmd):
+    txtout.write('## Vulnerabilities by Impact\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Count'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        pfc = vmd.current_compstat['passfailcount']
+        cnt = pfc[i]['pass'] + pfc[i]['fail']
+        t.add_row([i, cnt])
+
+    txtout.write(t.draw() + '\n')
+
+def ascii_nodes_impact(vmd):
+    txtout.write('## Nodes by Impact\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Number of Nodes'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        t.add_row([i, vmd.current_statestat['nodeimpact'][i]])
+
+    txtout.write(t.draw() + '\n')
+
+def ascii_age_status(vmd):
+    txtout.write('## Age by Impact\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Average Age (days)'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        t.add_row([i, '%.2f' \
+            % vmd.current_statestat['ageavg'][i]])
+
+    txtout.write(t.draw() + '\n')
 
 def ascii_res(vmd):
     txtout.write('## Current Average Resolution Time\n')
@@ -494,14 +566,14 @@ def ascii_compliance_trends(vmd):
     t.add_row(['Impact', 'Current - 2 (In/Out)',
         'Current - 1 (In/Out)', 'Current'])
     for i in ('maximum', 'high', 'mediumlow'):
-        if len(vmd.previous_compliance) > 1:
+        if len(vmd.previous_compstat) > 1:
             pc1s = '%d/%d' % \
                 (vmd.previous_compstat[1]['passfailcount'][i]['pass'],
                 vmd.previous_compstat[1]['passfailcount'][i]['fail'])
         else:
             pc1s = 'NA'
 
-        if len(vmd.previous_compliance) > 0:
+        if len(vmd.previous_compstat) > 0:
             pc0s = '%d/%d' % \
                 (vmd.previous_compstat[0]['passfailcount'][i]['pass'],
                 vmd.previous_compstat[0]['passfailcount'][i]['fail'])
