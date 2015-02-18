@@ -289,7 +289,8 @@ def vuln_impact(vulnset):
     for a in vulnset:
         for v in vulnset[a]:
             if v.vid not in vbuf:
-                vbuf[v.vid] = {'count': 0, 'score': 0, 'age_set': []}
+                vbuf[v.vid] = {'count': 0, 'score': 0, 'age_set': [],
+                    'title': v.title}
             vbuf[v.vid]['count'] += 1
             vbuf[v.vid]['score'] += v.cvss
             vbuf[v.vid]['age_set'].append(v.age_days)
@@ -502,6 +503,23 @@ def ascii_output(vmd):
     txtout.write('Host Details\n')
     txtout.write('------------\n')
     ascii_host_impact(vmd)
+    txtout.write('\n')
+
+    txtout.write('Vulnerability Details\n')
+    txtout.write('---------------------\n')
+    ascii_vuln_impact(vmd)
+
+def ascii_vuln_impact(vmd):
+    txtout.write('## Top Issues by Impact\n')
+
+    t = Texttable()
+
+    t.add_row(['Title', 'Instances', 'Cumulative Impact'])
+    for i in range(20):
+        v = vmd.current_statestat['vulnimpact'][i]
+        t.add_row([v['title'], v['count'], '%.2f' % v['score']])
+
+    txtout.write(t.draw() + '\n')
 
 def ascii_host_impact(vmd):
     txtout.write('## Top Hosts by Impact\n')
