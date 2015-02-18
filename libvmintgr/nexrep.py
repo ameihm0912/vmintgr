@@ -230,6 +230,36 @@ def vmd_compliance(vlist):
         % (len(ret), failcnt))
     return ret
 
+def compliance_impactsum(compset):
+    ret = {}
+
+    tmpbuf = {'maximum': {}, 'high': {}}
+    for c in compset:
+        if not c.failed:
+            continue
+        if c.failvuln.cvss < 7:
+            continue
+        elif c.failvuln.cvss >= 9:
+            label = 'maximum'
+        else:
+            label = 'high'
+        if c.failvuln.vid not in tmpbuf[label]:
+            tmpbuf[label][c.failvuln.vid] = {'vid': c.failvuln.vid, \
+                'count': 1, 'title': c.failvuln.title}
+        else:
+            tmpbuf[label][c.failvuln.vid]['count'] += 1
+    ret['maximum'] = []
+    for v in tmpbuf['maximum']:
+        ret['maximum'].append(tmpbuf['maximum'][v])
+    ret['high'] = []
+    for v in tmpbuf['high']:
+        ret['high'].append(tmpbuf['high'][v])
+    ret['maximum'] = sorted(ret['maximum'], key=lambda k: k['count'], \
+        reverse=True)
+    ret['high'] = sorted(ret['high'], key=lambda k: k['count'], \
+        reverse=True)
+    return ret
+
 def compliance_count(compset):
     ret = {}
 
@@ -424,10 +454,13 @@ def dataset_compstat(vmd):
     debug.printd('summarizing compliance statistics...')
     vmd.current_compstat['passfailcount'] = \
         compliance_count(vmd.current_compliance)
+    vmd.current_compstat['impactsum'] = \
+        compliance_impactsum(vmd.current_compliance)
 
     for i in vmd.previous_compliance:
         newval = {}
         newval['passfailcount'] = compliance_count(i)
+        newval['impactsum'] = compliance_impactsum(i)
         vmd.previous_compstat.append(newval)
 
 def dataset_compliance(vmd):
@@ -481,6 +514,7 @@ def ascii_output(vmd):
     txtout.write('\n')
     ascii_res(vmd)
     txtout.write('\n')
+    ascii_outside_compliance(vmd, 'maximum')
 
     txtout.write('Current State Summary\n')
     txtout.write('---------------------\n\n')
@@ -508,6 +542,9 @@ def ascii_output(vmd):
     txtout.write('Vulnerability Details\n')
     txtout.write('---------------------\n')
     ascii_vuln_impact(vmd)
+
+def ascii_outside_compliance(vmd, label):
+    pass
 
 def ascii_vuln_impact(vmd):
     txtout.write('## Top Issues by Impact\n')
