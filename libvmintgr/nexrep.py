@@ -7,6 +7,7 @@ import csv
 import StringIO
 import datetime
 import pytz
+from texttable import *
 
 import debug
 import vuln
@@ -27,9 +28,6 @@ class VMDataSet(object):
         self.previous_compstat = []
 
         self.hist = None
-
-def risk_summary(vmd):
-    pass
 
 def populate_query_filters(scanner, gid):
     populate_device_filter(scanner, gid)
@@ -462,3 +460,67 @@ def dataset_fetch(scanner, gid, window_start, window_end):
 
     return vmd
 
+#
+# ASCII output functions
+#
+
+txtout = sys.stdout
+
+def ascii_output(vmd):
+    txtout.write('Compliance Summary\n')
+    txtout.write('------------------\n\n')
+    ascii_compliance_status(vmd)
+    txtout.write('\n')
+    ascii_compliance_trends(vmd)
+    txtout.write('\n')
+    ascii_res(vmd)
+
+def ascii_res(vmd):
+    txtout.write('## Current Average Resolution Time\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Average (Days)'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        rsec = vmd.current_statestat['avgrestime'][i]
+        daystr = '%.2f' % (rsec / 60 / 60 / 24)
+        t.add_row([i, daystr])
+
+    txtout.write(t.draw() + '\n')
+
+def ascii_compliance_trends(vmd):
+    txtout.write('## Compliance Trends\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Current - 2 (In/Out)',
+        'Current - 1 (In/Out)', 'Current'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        if len(vmd.previous_compliance) > 1:
+            pc1s = '%d/%d' % \
+                (vmd.previous_compstat[1]['passfailcount'][i]['pass'],
+                vmd.previous_compstat[1]['passfailcount'][i]['fail'])
+        else:
+            pc1s = 'NA'
+
+        if len(vmd.previous_compliance) > 0:
+            pc0s = '%d/%d' % \
+                (vmd.previous_compstat[0]['passfailcount'][i]['pass'],
+                vmd.previous_compstat[0]['passfailcount'][i]['fail'])
+        else:
+            pc0s = 'NA'
+
+        cs = '%d/%d' % (vmd.current_compstat['passfailcount'][i]['pass'],
+            vmd.current_compstat['passfailcount'][i]['fail'])
+
+        t.add_row([i, pc1s, pc0s, cs])
+
+    txtout.write(t.draw() + '\n')
+
+def ascii_compliance_status(vmd):
+    txtout.write('## Vulnerability Compliance Status\n')
+
+    t = Texttable()
+    dptr = vmd.current_compstat['passfailcount']
+    t.add_row(['Impact', 'In Compliance', 'Out of Compliance'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        t.add_row([i, dptr[i]['pass'], dptr[i]['fail']])
+    txtout.write(t.draw() + '\n')

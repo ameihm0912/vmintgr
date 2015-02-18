@@ -30,7 +30,7 @@ def usage():
 def group_tac(gid, window_start, window_end):
     nexrep.populate_query_filters(scanner, gid)
     vmd = nexrep.dataset_fetch(scanner, gid, window_start, window_end)
-    nexrep.risk_summary(vmd)
+    nexrep.ascii_output(vmd)
 
 def domain():
     global vmconfig
