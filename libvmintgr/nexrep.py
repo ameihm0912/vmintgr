@@ -102,7 +102,6 @@ def vulns_over_time(scanner, gid, start, end):
         newvuln.title = i[6]
         newvuln.cvss = float(i[7])
 
-
         idx = i[3].find('.')
         if idx > 0:
             dstr = i[3][:idx]
@@ -323,6 +322,40 @@ def node_impact_count(vulnset):
             ret[cntset] += 1
     return ret
 
+def find_vid(vid, vbuf):
+    for v in vbuf:
+        if v.vid == vid:
+            return v
+
+def find_resolved(vmd):
+    if len(vmd.previous_states) == 0:
+        return []
+
+    cur = vmd.current_state
+    old = vmd.previous_states[0]
+
+    vbuf = {}
+    for a in old:
+        for v in old[a]:
+            if v.vid not in vbuf:
+                vbuf[v.vid] = {'vid': v.vid, 'count': 0, 'resolved': 0}
+            # See if the issue is found in the current window, if not it's
+            # marked as resolved.
+            if a not in cur:
+                vbuf[v.vid]['resolved'] += 1
+                continue
+            tmpv = find_vid(v.vid, cur[a])
+            if tmpv == None:
+                vbuf[v.vid]['resolved'] += 1
+                continue
+            vbuf[v.vid]['count'] += 1
+    ret = []
+    for v in vbuf:
+        new = vbuf[v]
+        new['vid'] = v
+        ret.append(new)
+    return ret
+
 def dataset_statestat(vmd):
     debug.printd('summarizing state statistics...')
     vmd.current_statestat['ageavg'] = \
@@ -333,6 +366,8 @@ def dataset_statestat(vmd):
         host_impact(vmd.current_state)
     vmd.current_statestat['vulnimpact'] = \
         vuln_impact(vmd.current_state)
+    vmd.current_statestat['resolved'] = \
+        find_resolved(vmd)
 
     for i in vmd.previous_states:
         newval = {}
