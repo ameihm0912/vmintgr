@@ -275,9 +275,11 @@ def host_impact(vulnset):
     ret = []
     for a in vulnset:
         suma = 0
+        cnt = 0
         for v in vulnset[a]:
             suma += v.cvss
-        ret.append({'assetid': a, 'score': suma})
+            cnt += 1
+        ret.append({'assetid': a, 'score': suma, 'count': cnt})
     ret = sorted(ret, key=lambda k: k['score'], reverse=True)
     return ret
 
@@ -495,6 +497,27 @@ def ascii_output(vmd):
     ascii_impact_trend(vmd)
     txtout.write('\n')
     ascii_age_trend(vmd)
+    txtout.write('\n')
+
+    txtout.write('Host Details\n')
+    txtout.write('------------\n')
+    ascii_host_impact(vmd)
+
+def ascii_host_impact(vmd):
+    txtout.write('## Top Hosts by Impact\n')
+
+    t = Texttable()
+
+    t.add_row(['Hostname', 'Address', 'Vulnerabilities', 'Cumulative Impact'])
+    for i in range(20):
+        chost = vmd.current_statestat['hostimpact'][i]
+        aptr = vmd.current_state[chost['assetid']]
+        if len(aptr) == 0:
+            raise Exception('asset entry with no issues')
+        hname = aptr[0].hostname
+        addr = aptr[0].ipaddr
+        t.add_row([hname, addr, chost['count'], chost['score']])
+    txtout.write(t.draw() + '\n')
 
 def ascii_issues_resolved(vmd):
     txtout.write('## Issues Resolved\n')
