@@ -336,9 +336,12 @@ def find_resolved(vmd):
     for a in old:
         for v in old[a]:
             if v.vid not in vbuf:
-                vbuf[v.vid] = {'vid': v.vid, 'count': 0, 'resolved': 0}
+                vbuf[v.vid] = {'vid': v.vid, 'count': 0, 'resolved': 0,
+                    'title': None, 'cvss': 0}
             # See if the issue is found in the current window, if not it's
             # marked as resolved.
+            vbuf[v.vid]['title'] = v.title
+            vbuf[v.vid]['cvss'] = v.cvss
             if a not in cur:
                 vbuf[v.vid]['resolved'] += 1
                 continue
@@ -484,12 +487,33 @@ def ascii_output(vmd):
     txtout.write('\n')
     ascii_nodes_impact(vmd)
     txtout.write('\n')
+    ascii_issues_resolved(vmd)
+    txtout.write('\n')
 
     txtout.write('Trending\n')
     txtout.write('--------\n')
     ascii_impact_trend(vmd)
     txtout.write('\n')
     ascii_age_trend(vmd)
+
+def ascii_issues_resolved(vmd):
+    txtout.write('## Issues Resolved\n')
+    d = sorted(vmd.current_statestat['resolved'], \
+        key=lambda k: k['resolved'], reverse=True)
+
+    t = Texttable()
+    t.add_row(['Title', 'Resolved On', 'Remains On', 'Impact'])
+    for i in d:
+        if i['resolved'] == 0:
+            continue
+        if i['cvss'] >= 9:
+            label = 'maximum'
+        elif i['cvss'] >= 7 and i['cvss'] <= 0:
+            label = 'high'
+        else:
+            label = 'mediumlow'
+        t.add_row([i['title'], i['resolved'], i['count'], label])
+    txtout.write(t.draw() + '\n')
 
 def ascii_age_trend(vmd):
     txtout.write('## Average Age by Impact over Time\n')
