@@ -488,6 +488,31 @@ def ascii_output(vmd):
     txtout.write('Trending\n')
     txtout.write('--------\n')
     ascii_impact_trend(vmd)
+    txtout.write('\n')
+    ascii_age_trend(vmd)
+
+def ascii_age_trend(vmd):
+    txtout.write('## Average Age by Impact over Time\n')
+
+    t = Texttable()
+    t.add_row(['Impact', 'Current - 2 (days)', 'Current - 1 (days)',
+        'Current'])
+    for i in ('maximum', 'high', 'mediumlow'):
+        if vmd.previous_statestat[1]['ageavg'] != None:
+            ps1s = vmd.previous_statestat[1]['ageavg'][i]
+        else:
+            ps1s = 'NA'
+
+        if vmd.previous_statestat[0]['ageavg'] != None:
+            ps0s = vmd.previous_statestat[0]['ageavg'][i]
+        else:
+            ps0s = 'NA'
+
+        cs = vmd.current_statestat['ageavg'][i]
+
+        t.add_row([i, ps1s, ps0s, cs])
+
+    txtout.write(t.draw() + '\n')
 
 def ascii_impact_trend(vmd):
     txtout.write('## Vulnerabilities by Impact over Time\n')
