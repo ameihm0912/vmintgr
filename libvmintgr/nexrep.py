@@ -284,6 +284,28 @@ def host_impact(vulnset):
     ret = sorted(ret, key=lambda k: k['score'], reverse=True)
     return ret
 
+def vuln_impact(vulnset):
+    ret = []
+    vbuf = {}
+    for a in vulnset:
+        for v in vulnset[a]:
+            if v.vid not in vbuf:
+                vbuf[v.vid] = {'count': 0, 'score': 0, 'age_set': []}
+            vbuf[v.vid]['count'] += 1
+            vbuf[v.vid]['score'] += v.cvss
+            vbuf[v.vid]['age_set'].append(v.age_days)
+    for i in vbuf:
+        v = vbuf[i]
+        v['ageavg'] = reduce(lambda x, y: x + y, v['age_set']) \
+            / len(v['age_set'])
+        del v['age_set']
+    for v in vbuf:
+        new = vbuf[v]
+        new['vid'] = v
+        ret.append(new)
+    ret = sorted(ret, key=lambda k: k['score'], reverse=True)
+    return ret
+
 def node_impact_count(vulnset):
     ret = {'maximum': 0, 'high': 0, 'mediumlow': 0}
     for a in vulnset:
@@ -309,12 +331,15 @@ def dataset_statestat(vmd):
         node_impact_count(vmd.current_state)
     vmd.current_statestat['hostimpact'] = \
         host_impact(vmd.current_state)
+    vmd.current_statestat['vulnimpact'] = \
+        vuln_impact(vmd.current_state)
 
     for i in vmd.previous_states:
         newval = {}
         newval['ageavg'] = age_average(i)
         newval['nodeimpact'] = node_impact_count(i)
         newval['hostimpact'] = host_impact(i)
+        newval['vulnimpact'] = vuln_impact(i)
         vmd.previous_statestat.append(newval)
 
 def dataset_compstat(vmd):
