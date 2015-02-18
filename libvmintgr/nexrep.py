@@ -356,6 +356,43 @@ def find_resolved(vmd):
         ret.append(new)
     return ret
 
+def avg_resolution(vmd):
+    def get_total_seconds(td):
+        return (td.microseconds + (td.seconds + td.days * 24 * 3600) \
+            * 1e6) / 1e6
+
+    candidates = {'maximum': [], 'high': [], 'mediumlow': []}
+    for a in vmd.hist:
+        for vid in vmd.hist[a]:
+            vent = vmd.hist[a][vid]
+            iscand = False
+            if a not in vmd.current_state:
+                iscand = True
+            else:
+                if find_vid(vid, vmd.current_state[a]) == None:
+                    iscand = True
+            if not iscand:
+                continue
+            if vent['vulnerability'].cvss >= 9:
+                cntset = 'maximum'
+            elif vent['vulnerability'].cvss >= 7 and \
+                vent['vulnerability'].cvss < 9:
+                cntset = 'high'
+            else:
+                cntset = 'mediumlow'
+            candidates[cntset].append(vent)
+
+    tmpbuf = {}
+    ret = {}
+    for lbl in candidates.keys():
+        tmpbuf[lbl] = []
+        for ent in candidates[lbl]:
+            delta = ent['last_date'] - ent['first_date']
+            tmpbuf[lbl].append(get_total_seconds(delta))
+        ret[lbl] = reduce(lambda x, y: x + y, tmpbuf[lbl]) \
+            / len(tmpbuf[lbl])
+    return ret
+
 def dataset_statestat(vmd):
     debug.printd('summarizing state statistics...')
     vmd.current_statestat['ageavg'] = \
@@ -368,6 +405,8 @@ def dataset_statestat(vmd):
         vuln_impact(vmd.current_state)
     vmd.current_statestat['resolved'] = \
         find_resolved(vmd)
+    vmd.current_statestat['avgrestime'] = \
+        avg_resolution(vmd)
 
     for i in vmd.previous_states:
         newval = {}
