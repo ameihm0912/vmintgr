@@ -4,15 +4,35 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sys
+import getopt
+
+def usage():
+    sys.stdout.write('usage: hfuzz-add.py [-hi] vulnauto hfuzzout ' \
+        'groupmatch\n')
 
 def domain():
-    if len(sys.argv) != 4:
-        sys.stdout.write('usage: hfuzz-add.py vulnauto hfuzzout groupmatch\n')
+    tag = 'namematch ='
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hi')
+    except getopt.GetoptError as e:
+        sys.stderr.write(str(e) + '\n')
+        usage()
+        sys.exit(1)
+    for o, a in opts:
+        if o == '-h':
+            usage()
+            sys.exit(0)
+        elif o == '-i':
+            tag = 'ipmatch ='
+
+    if len(args) != 3:
+        usage()
         sys.exit(0)
 
-    vaf = sys.argv[1]
-    hfo = sys.argv[2]
-    grp = sys.argv[3]
+    vaf = args[0]
+    hfo = args[1]
+    grp = args[2]
 
     fd = open(vaf, 'r')
     buf = fd.readlines()
@@ -22,7 +42,7 @@ def domain():
 
     idx = 0
     for i in buf:
-        if 'namematch =' in i:
+        if tag in i:
             break
         idx += 1
 
@@ -48,7 +68,7 @@ def domain():
         if el[2] != grp:
             continue
         if firstent:
-            buf[idx] = 'namematch = #AUTOADD\n'
+            buf[idx] = '%s #AUTOADD\n' % tag
             autoadd = True
             idx += 1
             buf.insert(idx, '\t%s\n' % el[0])
