@@ -352,9 +352,11 @@ class VMIntDB(object):
                 age = ? WHERE
                 id = ?''', (v.discovered_date_unix, v.age_days, rows[0][0]))
             self.workflow_check_reset(rows[0][0])
-            # Update the proof associated with this issue as reported by Nexpose
-            c.execute('''UPDATE assetvulns SET proof = ?
-                WHERE assetvulns.id = ?''', (v.proof, rows[0][0]))
+            # Update the proof associated with this issue as reported by
+            # Nexpose, in addition to the assets current autogroup
+            c.execute('''UPDATE assetvulns SET proof = ?,
+                autogroup = ?
+                WHERE assetvulns.id = ?''', (v.proof, vauto.name, rows[0][0]))
         self._conn.commit()
 
     def resolve_vulnerability(self, vidlist, dbassetid):
