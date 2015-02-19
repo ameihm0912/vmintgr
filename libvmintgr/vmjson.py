@@ -47,6 +47,7 @@ def wf_to_json(w):
     ret['asset']['hostname'] = w.vulnerability.hostname
     ret['asset']['macaddress'] = w.vulnerability.macaddr
     ret['asset']['autogroup'] = w.vulnerability.autogroup
+    ret['asset']['operator'] = w.vulnerability.operator
 
     if w.vulnerability.os != None:
         ret['asset']['os'] = w.vulnerability.os
@@ -79,17 +80,7 @@ def wf_to_json(w):
 
     return json.dumps(ret)
 
-def ce_add_group_tags(w, j):
-    j['tags']['team'] = w.failvuln.autogroup
-
-    if w.failvuln.autogroup == 'releng':
-        j['tags']['operator'] = 'releng'
-    else:
-        j['tags']['operator'] = 'it'
-
-    return j
-
-def ce_to_json(w, target):
+def ce_to_json(w, target, autogroup, operator):
     ret = {}
 
     ret['target'] = target
@@ -110,8 +101,10 @@ def ce_to_json(w, target):
     ret['check']['test']['value'] = 'nexpose'
     
     ret['tags'] = {}
-    if w != None:
-        ret = ce_add_group_tags(w, ret)
+    if operator == 'systems':
+        operator = 'it'
+    ret['tags']['operator'] = operator
+    ret['tags']['autogroup'] = autogroup
 
     if w == None:
         ret['compliance'] = True

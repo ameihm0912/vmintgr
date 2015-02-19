@@ -34,6 +34,7 @@ class VMConfig(object):
         self.exempt_dir = None
 
         self.vulnauto_dir = None
+        self.operdir = None
         self.escdir = None
         self.escalate_vulns = False
         self.escalate_compliance = False
@@ -94,6 +95,8 @@ class VMConfig(object):
             self.vulnauto_dir = v
         elif k == 'escalations':
             self.escdir = v
+        elif k == 'operators':
+            self.operdir = v
         elif k == 'escalate_vulns':
             if v == '1':
                 self.escalate_vulns = True

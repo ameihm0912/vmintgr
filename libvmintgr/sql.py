@@ -11,6 +11,7 @@ import sys
 
 import vuln
 import debug
+import operator
 
 class VMIntDB(object):
     SVER = 1
@@ -154,6 +155,20 @@ class VMIntDB(object):
         else:
             return rows[0][0]
 
+    def aid_to_autogroup(self, aid):
+        c = self._conn.cursor()
+        c.execute('''SELECT ip, hostname, mac FROM assets
+            WHERE id = ?''', (aid,))
+        rows = c.fetchall()
+        if len(rows) == 0:
+            return None
+        ipaddr = rows[0][0]
+        hname = rows[0][1]
+        mac = rows[0][2]
+        agrp = vuln.vuln_auto_finder(ipaddr, mac, hname)
+        sname = operator.addr_get_operator(ipaddr)
+        return agrp.name, sname
+
     def get_compliance(self, aid):
         c = self._conn.cursor()
         c.execute('''SELECT assets.id, compliance.id AS cid,
@@ -192,6 +207,7 @@ class VMIntDB(object):
         v.title = i['title'].encode('ascii', 'ignore')
         v.cvss = i['cvss']
         v.autogroup = i['autogroup']
+        v.operator = operator.addr_get_operator(v.ipaddr)
         ce.failvuln = v
 
         return ce
@@ -230,6 +246,7 @@ class VMIntDB(object):
             v.hostname = i['hostname'].encode('ascii', 'ignore')
             v.vid = i['nxvid']
             v.autogroup = i['autogroup']
+            v.operator = operator.addr_get_operator(v.ipaddr)
             v.proof = i['proof']
 
             # All that is stored right now is Nexpose vulnerabilities, so

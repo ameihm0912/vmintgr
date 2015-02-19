@@ -146,6 +146,7 @@ class vulnerability(object):
         self.known_exploits = None
         self.known_malware = None
         self.autogroup = None
+        self.operator = None
         self.proof = None
 
     def __str__(self):
@@ -221,10 +222,13 @@ def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
 
         if ce == None:
             target = dbconn.aid_to_host(i)
+            autogroup, operator = dbconn.aid_to_autogroup(i)
         else:
             target = ce.failvuln.hostname
+            autogroup = ce.failvuln.autogroup
+            operator = ce.failvuln.operator
 
-        jc = vmjson.ce_to_json(ce, target)
+        jc = vmjson.ce_to_json(ce, target, autogroup, operator)
         clist.append(jc)
 
     if len(clist) > 0:
