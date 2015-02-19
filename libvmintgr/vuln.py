@@ -420,8 +420,12 @@ def load_vulnauto_list(path):
                 pass
             elif k == 'ipmatch':
                 if v != '':
-                    newval = vulnauto_extract_pri(v)
-                    n.add_match(newval[0], newval[1])
+                    for i in v.split():
+                        if i == '#AUTOADD':
+                            continue
+                        if i != '':
+                            newval = vulnauto_extract_pri(i)
+                            n.add_match(newval[0], newval[1])
             elif k == 'namematch':
                 if v != '':
                     for i in v.split():
