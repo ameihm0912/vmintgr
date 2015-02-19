@@ -90,7 +90,7 @@ class VulnAutoEntry(object):
         # First try the IP
         for i in self._match_ip:
             if i[0] == ip:
-                return 50
+                return 100 + self.pri_adjust[i[1]]
 
         best = -1
         for i in self._match_net:
@@ -308,7 +308,6 @@ def vuln_auto_finder(address, mac, hostname):
             if ret > last:
                 cand = va
                 last = ret
-            continue
 
         ret = va.ip_test(address)
         if ret == -1:
