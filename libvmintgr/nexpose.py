@@ -155,6 +155,40 @@ def nexpose_fetch_report(repid, reploc):
     resp =urlopen(req)
     return resp.read()
 
+def software_extraction(scanner, targetpkg):
+    squery = '''
+    SELECT da.asset_id, da.ip_address, da.host_name,
+    ds.name, ds.version
+    FROM dim_asset da
+    JOIN dim_asset_software USING (asset_id)
+    JOIN dim_software ds USING (software_id)
+    WHERE ds.name ILIKE '%s'
+    ''' % targetpkg
+
+    buf = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2')
+    reader = csv.reader(StringIO.StringIO(buf))
+    ret = {}
+    for i in reader:
+        if len(i) == 0:
+            continue
+        if i[0] == 'asset_id':
+            continue
+        asset_id = i[0]
+        ip = i[1]
+        hname = i[2]
+        swname = i[3]
+        swver = i[4]
+
+        if asset_id not in ret:
+            ret[asset_id] = []
+        new = {}
+        new['ipaddr'] = ip
+        new['hostname'] = hname
+        new['swname'] = swname
+        new['swver'] = swver
+        ret[asset_id].append(new)
+    return ret
+
 def reptest(scanner):
     squery = '''
     SELECT da.ip_address, da.host_name, os.name, critical_vulnerabilities, severe_vulnerabilities,

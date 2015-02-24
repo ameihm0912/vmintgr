@@ -32,7 +32,7 @@ vulns_writefile = None
 
 def usage():
     sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-c regex] [-f path] ' \
-        '[-r path] [-w path]\n' \
+        '[-q sqllike] [-r path] [-w path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
@@ -45,6 +45,7 @@ def usage():
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
         '\t-m\t\tDequeue events to MozDef\n' \
+        '\t-q sqllike\tQuery hosts for installed software (e.g., \'%apache%\')\n' \
         '\t-r path\t\tWith -V, read vulnerabilities from file\n' \
         '\t-R\t\tStored report list\n' \
         '\t-S\t\tSite list\n' \
@@ -80,6 +81,15 @@ def wf_asset_dump():
                 sys.stdout.write('unknown\n')
             else:
                 sys.stdout.write('%s\n' % hname)
+
+def wf_swquerymode(targetpkg):
+    libvmintgr.printd('starting software query workflow...')
+    asw = libvmintgr.software_extraction(scanner, targetpkg)
+    for i in asw:
+        for ent in asw[i]:
+            sys.stdout.write('%s %s %s %s\n' % \
+                (ent['ipaddr'].ljust(15), ent['hostname'].ljust(50),
+                ent['swname'].ljust(20), ent['swver']))
 
 def wf_cvemode(targetcve):
     libvmintgr.printd('starting cve report workflow...')
@@ -232,9 +242,10 @@ def domain():
     reptest = False
     mozdefmode = False
     cvemode = False
+    swquerymode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:GhmRr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:Ghmq:Rr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -256,6 +267,10 @@ def domain():
             cvemode = True
             selection = True
             targetcve = a
+        elif o == '-q':
+            swquerymode = True
+            selection = True
+            targetpkg = a
         elif o == '-R':
             replistmode = True
             selection = True
@@ -346,6 +361,8 @@ def domain():
         wf_mozdef()
     elif cvemode:
         wf_cvemode(targetcve)
+    elif swquerymode:
+        wf_swquerymode(targetpkg)
 
 def wrapmain():
     try:
