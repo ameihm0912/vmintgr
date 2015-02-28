@@ -439,8 +439,9 @@ def dataset_statestat(vmd):
         vuln_impact(vmd.current_state)
     vmd.current_statestat['resolved'] = \
         find_resolved(vmd)
-    vmd.current_statestat['avgrestime'] = \
-        avg_resolution(vmd)
+    # XXX Disabled for now.
+    #vmd.current_statestat['avgrestime'] = \
+    #    avg_resolution(vmd)
 
     for i in vmd.previous_states:
         newval = {}
@@ -490,7 +491,12 @@ def dataset_fetch(scanner, gid, window_start, window_end):
     trend_start = window_start - ((window_end - window_start) * 3)
     debug.printd('fetching historical findings from %s to %s' % \
         (trend_start, window_end))
-    vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
+
+    # XXX Disable historical query for now.
+    # This query is expensive and currently takes an extremely long time to
+    # complete. It's only used for average resolution time right now so
+    # temporarily disabled.
+    #vmd.hist = vulns_over_time(scanner, gid, trend_start, window_end)
 
     dataset_statestat(vmd)
 
@@ -512,8 +518,9 @@ def ascii_output(vmd):
     txtout.write('\n')
     ascii_compliance_trends(vmd)
     txtout.write('\n')
-    ascii_res(vmd)
-    txtout.write('\n')
+    # XXX Disable for now.
+    #ascii_res(vmd)
+    #txtout.write('\n')
     ascii_outside_compliance(vmd, 'maximum')
     txtout.write('\n')
     ascii_outside_compliance(vmd, 'high')
