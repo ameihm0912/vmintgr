@@ -582,6 +582,8 @@ def ascii_host_impact(vmd):
 
     t.add_row(['Hostname', 'Address', 'Vulnerabilities', 'Cumulative Impact'])
     for i in range(20):
+        if i >= len(vmd.current_statestat['hostimpact']):
+            break
         chost = vmd.current_statestat['hostimpact'][i]
         aptr = vmd.current_state[chost['assetid']]
         if len(aptr) == 0:
