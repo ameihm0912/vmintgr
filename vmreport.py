@@ -19,6 +19,7 @@ scanner = None
 def usage():
     sys.stdout.write('usage: vmreport.py [-dh] [-f path] [-g group]\n' \
             '\n' \
+            '\t-c\t\tCSV table output\n' \
             '\t-C\t\tEnable adhoc query cache\n' \
             '\t-d\t\tEnable debugging\n' \
             '\t-e time\t\tSpecify end of statistics window\n' \
@@ -41,8 +42,10 @@ def domain():
     window_end = pytz.timezone('UTC').localize(datetime.datetime.utcnow())
     window_start = window_end - datetime.timedelta(days=31)
 
+    nexrep.set_report_mode(nexrep.OUTMODE_ASCII)
+
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Cde:hf:g:s:')
+        opts, args = getopt.getopt(sys.argv[1:], 'cCde:hf:g:s:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -51,6 +54,8 @@ def domain():
         if o == '-h':
             usage()
             sys.exit(0)
+        elif o == '-c':
+            nexrep.set_report_mode(nexrep.OUTMODE_CSV)
         elif o == '-C':
             nexadhoc.nexpose_adhoc_cache(True)
         elif o == '-d':

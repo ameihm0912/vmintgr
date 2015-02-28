@@ -33,6 +33,10 @@ class VMDataSet(object):
 
         self.hist = None
 
+def set_report_mode(m):
+    global report_outmode
+    report_outmode = m
+
 def populate_query_filters(scanner, gid):
     populate_device_filter(scanner, gid)
 
@@ -519,13 +523,18 @@ class DataTable(object):
     def __init__(self, outmode):
         self._outmode = outmode
         self._table = None
+        self._csv = None
 
         if self._outmode == OUTMODE_ASCII:
             self._table = Texttable()
+        elif self._outmode == OUTMODE_CSV:
+            self._csv = csv.writer(txtout)
 
     def addrow(self, vals):
         if self._table != None:
             self._table.add_row(vals)
+        if self._csv != None:
+            self._csv.writerow(vals)
 
     def tableprint(self):
         if self._table != None:
