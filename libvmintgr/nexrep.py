@@ -13,7 +13,11 @@ import debug
 import vuln
 import nexadhoc
 
+OUTMODE_ASCII = 0
+OUTMODE_CSV = 1
+
 device_filter = None
+report_outmode = OUTMODE_ASCII
 
 class VMDataSet(object):
     def __init__(self):
@@ -511,76 +515,95 @@ def dataset_fetch(scanner, gid, window_start, window_end):
 
 txtout = sys.stdout
 
+class DataTable(object):
+    def __init__(self, outmode):
+        self._outmode = outmode
+        self._table = None
+
+        if self._outmode == OUTMODE_ASCII:
+            self._table = Texttable()
+
+    def addrow(self, vals):
+        if self._table != None:
+            self._table.add_row(vals)
+
+    def tableprint(self):
+        if self._table != None:
+            report_write(self._table.draw() + '\n')
+
+def report_write(s):
+    txtout.write(s)
+
 def ascii_output(vmd):
-    txtout.write('Compliance Summary\n')
-    txtout.write('------------------\n\n')
+    report_write('Compliance Summary\n')
+    report_write('------------------\n\n')
     ascii_compliance_status(vmd)
-    txtout.write('\n')
+    report_write('\n')
     ascii_compliance_trends(vmd)
-    txtout.write('\n')
+    report_write('\n')
     # XXX Disable for now.
     #ascii_res(vmd)
-    #txtout.write('\n')
+    #report_write('\n')
     ascii_outside_compliance(vmd, 'maximum')
-    txtout.write('\n')
+    report_write('\n')
     ascii_outside_compliance(vmd, 'high')
-    txtout.write('\n')
+    report_write('\n')
 
-    txtout.write('Current State Summary\n')
-    txtout.write('---------------------\n\n')
+    report_write('Current State Summary\n')
+    report_write('---------------------\n\n')
     ascii_impact_status(vmd)
-    txtout.write('\n')
+    report_write('\n')
     ascii_age_status(vmd)
-    txtout.write('\n')
+    report_write('\n')
     ascii_nodes_impact(vmd)
-    txtout.write('\n')
+    report_write('\n')
     ascii_issues_resolved(vmd)
-    txtout.write('\n')
+    report_write('\n')
 
-    txtout.write('Trending\n')
-    txtout.write('--------\n')
+    report_write('Trending\n')
+    report_write('--------\n')
     ascii_impact_trend(vmd)
-    txtout.write('\n')
+    report_write('\n')
     ascii_age_trend(vmd)
-    txtout.write('\n')
+    report_write('\n')
 
-    txtout.write('Host Details\n')
-    txtout.write('------------\n')
+    report_write('Host Details\n')
+    report_write('------------\n')
     ascii_host_impact(vmd)
-    txtout.write('\n')
+    report_write('\n')
 
-    txtout.write('Vulnerability Details\n')
-    txtout.write('---------------------\n')
+    report_write('Vulnerability Details\n')
+    report_write('---------------------\n')
     ascii_vuln_impact(vmd)
 
 def ascii_outside_compliance(vmd, label):
-    txtout.write('## Outside Compliance Window (%s)\n' % label)
-    t = Texttable()
+    report_write('## Outside Compliance Window (%s)\n' % label)
+    t = DataTable(report_outmode)
 
-    t.add_row(['Title', 'Instances', 'Associated Bugs'])
+    t.addrow(['Title', 'Instances', 'Associated Bugs'])
     for i in vmd.current_compstat['impactsum'][label]:
-        t.add_row([i['title'], i['count'], 'NA'])
+        t.addrow([i['title'], i['count'], 'NA'])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_vuln_impact(vmd):
-    txtout.write('## Top Issues by Impact\n')
+    report_write('## Top Issues by Impact\n')
 
-    t = Texttable()
+    t = DataTable(report_outmode)
 
-    t.add_row(['Title', 'Instances', 'Cumulative Impact'])
+    t.addrow(['Title', 'Instances', 'Cumulative Impact'])
     for i in range(20):
         v = vmd.current_statestat['vulnimpact'][i]
-        t.add_row([v['title'], v['count'], '%.2f' % v['score']])
+        t.addrow([v['title'], v['count'], '%.2f' % v['score']])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_host_impact(vmd):
-    txtout.write('## Top Hosts by Impact\n')
+    report_write('## Top Hosts by Impact\n')
 
-    t = Texttable()
+    t = DataTable(report_outmode)
 
-    t.add_row(['Hostname', 'Address', 'Vulnerabilities', 'Cumulative Impact'])
+    t.addrow(['Hostname', 'Address', 'Vulnerabilities', 'Cumulative Impact'])
     for i in range(20):
         if i >= len(vmd.current_statestat['hostimpact']):
             break
@@ -590,16 +613,16 @@ def ascii_host_impact(vmd):
             raise Exception('asset entry with no issues')
         hname = aptr[0].hostname
         addr = aptr[0].ipaddr
-        t.add_row([hname, addr, chost['count'], chost['score']])
-    txtout.write(t.draw() + '\n')
+        t.addrow([hname, addr, chost['count'], chost['score']])
+    t.tableprint()
 
 def ascii_issues_resolved(vmd):
-    txtout.write('## Issues Resolved\n')
+    report_write('## Issues Resolved\n')
     d = sorted(vmd.current_statestat['resolved'], \
         key=lambda k: k['resolved'], reverse=True)
 
-    t = Texttable()
-    t.add_row(['Title', 'Resolved On', 'Remains On', 'Impact'])
+    t = DataTable(report_outmode)
+    t.addrow(['Title', 'Resolved On', 'Remains On', 'Impact'])
     for i in d:
         if i['resolved'] == 0:
             continue
@@ -609,14 +632,14 @@ def ascii_issues_resolved(vmd):
             label = 'high'
         else:
             label = 'mediumlow'
-        t.add_row([i['title'], i['resolved'], i['count'], label])
-    txtout.write(t.draw() + '\n')
+        t.addrow([i['title'], i['resolved'], i['count'], label])
+    t.tableprint()
 
 def ascii_age_trend(vmd):
-    txtout.write('## Average Age by Impact over Time\n')
+    report_write('## Average Age by Impact over Time\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Current - 2 (days)', 'Current - 1 (days)',
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Current - 2 (days)', 'Current - 1 (days)',
         'Current'])
     for i in ('maximum', 'high', 'mediumlow'):
         if vmd.previous_statestat[1]['ageavg'] != None:
@@ -631,15 +654,15 @@ def ascii_age_trend(vmd):
 
         cs = vmd.current_statestat['ageavg'][i]
 
-        t.add_row([i, ps1s, ps0s, cs])
+        t.addrow([i, ps1s, ps0s, cs])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_impact_trend(vmd):
-    txtout.write('## Vulnerabilities by Impact over Time\n')
+    report_write('## Vulnerabilities by Impact over Time\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Current - 2', 'Current - 1', 'Current'])
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Current - 2', 'Current - 1', 'Current'])
     for i in ('maximum', 'high', 'mediumlow'):
         if len(vmd.previous_compstat) > 1:
             pc1s = vmd.previous_compstat[1]['passfailcount'][i]['pass'] + \
@@ -656,60 +679,60 @@ def ascii_impact_trend(vmd):
         cs = vmd.current_compstat['passfailcount'][i]['pass'] + \
             vmd.current_compstat['passfailcount'][i]['fail']
 
-        t.add_row([i, pc1s, pc0s, cs])
+        t.addrow([i, pc1s, pc0s, cs])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_impact_status(vmd):
-    txtout.write('## Vulnerabilities by Impact\n')
+    report_write('## Vulnerabilities by Impact\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Count'])
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Count'])
     for i in ('maximum', 'high', 'mediumlow'):
         pfc = vmd.current_compstat['passfailcount']
         cnt = pfc[i]['pass'] + pfc[i]['fail']
-        t.add_row([i, cnt])
+        t.addrow([i, cnt])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_nodes_impact(vmd):
-    txtout.write('## Nodes by Impact\n')
+    report_write('## Nodes by Impact\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Number of Nodes'])
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Number of Nodes'])
     for i in ('maximum', 'high', 'mediumlow'):
-        t.add_row([i, vmd.current_statestat['nodeimpact'][i]])
+        t.addrow([i, vmd.current_statestat['nodeimpact'][i]])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_age_status(vmd):
-    txtout.write('## Age by Impact\n')
+    report_write('## Age by Impact\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Average Age (days)'])
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Average Age (days)'])
     for i in ('maximum', 'high', 'mediumlow'):
-        t.add_row([i, '%.2f' \
+        t.addrow([i, '%.2f' \
             % vmd.current_statestat['ageavg'][i]])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_res(vmd):
-    txtout.write('## Current Average Resolution Time\n')
+    report_write('## Current Average Resolution Time\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Average (Days)'])
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Average (Days)'])
     for i in ('maximum', 'high', 'mediumlow'):
         rsec = vmd.current_statestat['avgrestime'][i]
         daystr = '%.2f' % (rsec / 60 / 60 / 24)
-        t.add_row([i, daystr])
+        t.addrow([i, daystr])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_compliance_trends(vmd):
-    txtout.write('## Compliance Trends\n')
+    report_write('## Compliance Trends\n')
 
-    t = Texttable()
-    t.add_row(['Impact', 'Current - 2 (In/Out)',
+    t = DataTable(report_outmode)
+    t.addrow(['Impact', 'Current - 2 (In/Out)',
         'Current - 1 (In/Out)', 'Current'])
     for i in ('maximum', 'high', 'mediumlow'):
         if len(vmd.previous_compstat) > 1:
@@ -729,16 +752,16 @@ def ascii_compliance_trends(vmd):
         cs = '%d/%d' % (vmd.current_compstat['passfailcount'][i]['pass'],
             vmd.current_compstat['passfailcount'][i]['fail'])
 
-        t.add_row([i, pc1s, pc0s, cs])
+        t.addrow([i, pc1s, pc0s, cs])
 
-    txtout.write(t.draw() + '\n')
+    t.tableprint()
 
 def ascii_compliance_status(vmd):
-    txtout.write('## Vulnerability Compliance Status\n')
+    report_write('## Vulnerability Compliance Status\n')
 
-    t = Texttable()
+    t = DataTable(report_outmode)
     dptr = vmd.current_compstat['passfailcount']
-    t.add_row(['Impact', 'In Compliance', 'Out of Compliance'])
+    t.addrow(['Impact', 'In Compliance', 'Out of Compliance'])
     for i in ('maximum', 'high', 'mediumlow'):
-        t.add_row([i, dptr[i]['pass'], dptr[i]['fail']])
-    txtout.write(t.draw() + '\n')
+        t.addrow([i, dptr[i]['pass'], dptr[i]['fail']])
+    t.tableprint()
