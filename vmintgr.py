@@ -32,7 +32,7 @@ vulns_writefile = None
 
 def usage():
     sys.stdout.write('usage: vmintgr.py [-AadDeGhmRSs] [-c regex] [-f path] ' \
-        '[-q sqllike] [-r path] [-w path]\n' \
+        '[-g path] [-q sqllike] [-r path] [-w path]\n' \
         '\n' \
         '\t-A\t\tAsset grouping\n' \
         '\t-a\t\tDevice authentication failures\n' \
@@ -42,6 +42,7 @@ def usage():
         '\t-D\t\tDevice auto-purge\n' \
         '\t-e\t\tEscalation pass against database\n' \
         '\t-f path\t\tPath to configuration file\n' \
+        '\t-g path\t\tAdhoc group creation\n' \
         '\t-G\t\tAsset group list\n' \
         '\t-h\t\tUsage\n' \
         '\t-m\t\tDequeue events to MozDef\n' \
@@ -67,6 +68,12 @@ def wf_asset_grouping():
     libvmintgr.site_extraction(scanner)
     libvmintgr.asset_extraction(scanner)
     libvmintgr.asset_grouping(scanner)
+
+def wf_adhocgroup(targetgroup):
+    libvmintgr.printd('starting adhoc group creation mode...')
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    libvmintgr.adhoc_group(scanner, targetgroup)
 
 def wf_asset_dump():
     libvmintgr.printd('starting asset dump workflow...')
@@ -235,6 +242,7 @@ def domain():
     sitelistmode = False
     sitesyncmode = False
     grouplistmode = False
+    adhocgroupmode = False
     purgemode = False
     escmode = False
     selection = False
@@ -243,9 +251,10 @@ def domain():
     mozdefmode = False
     cvemode = False
     swquerymode = False
+    targetgroup = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:Ghmq:Rr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:g:Ghmq:Rr:SsVtw:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -267,6 +276,10 @@ def domain():
             cvemode = True
             selection = True
             targetcve = a
+        elif o == '-g':
+            adhocgroupmode = True
+            targetgroup = a
+            selection = True
         elif o == '-q':
             swquerymode = True
             selection = True
@@ -363,6 +376,8 @@ def domain():
         wf_cvemode(targetcve)
     elif swquerymode:
         wf_swquerymode(targetpkg)
+    elif adhocgroupmode:
+        wf_adhocgroup(targetgroup)
 
 def wrapmain():
     try:

@@ -610,6 +610,39 @@ def asset_update_group(scanner, groupdata):
         newsub = ET.SubElement(de, 'device', attrib={'id': str(i)})
     scanner.conn.asset_group_save((ET.tostring(e),))
 
+def adhoc_group(scanner, tgfile):
+    groupdata = {}
+
+    addrlist = []
+    fd = open(tgfile, 'r')
+    while True:
+        buf = fd.readline()
+        if buf == None or buf == '':
+            break
+        addrlist.append(buf.strip())
+    fd.close()
+    debug.printd('will group on %d addresses' % len(addrlist))
+
+    # Create a psuedo vulnauto entry to support creation of the adhoc
+    # group.
+    groupdata['autoentry'] = vuln.VulnAutoEntry('adhoc')
+    groupdata['autoentry'].description = 'adhoc'
+    groupdata['autoentry'].title = 'adhoc'
+
+    # Find each asset that matches an entry in the addrlist; since this is
+    # primarily used with MIG database dumps we just match on IP address.
+    # This could be expanded to match on hostname and other fields if needed.
+    groupdata['assetids'] = []
+    for s in scanner.sitelist:
+        for a in scanner.sitelist[s]['assets']:
+            if a['address'] in addrlist:
+                groupdata['assetids'].append(a['id'])
+    debug.printd('matched on %d assets' % len(groupdata['assetids']))
+
+    # Create the adhoc group.
+    debug.printd('updating adhoc group')
+    asset_update_group(scanner, groupdata)
+
 def asset_grouping(scanner):
     # Each automation entry that was loaded will result in an asset group
     groupdata = {}
