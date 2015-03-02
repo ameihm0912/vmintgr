@@ -320,6 +320,13 @@ class VMIntDB(object):
             rows = c.fetchall()
             if len(rows) == 0:
                 raise Exception('fatal error requesting vulns entry')
+
+            # Update the CVSS score on the vulnerability to handle cases where
+            # source signatures are changed after initial publication.
+            c.execute('''UPDATE vulns SET cvss = ? WHERE id = ?''', \
+                (v.cvss, rows[0][0]))
+            self._conn.commit()
+
             return rows[0][0]
 
         ret = c.lastrowid
