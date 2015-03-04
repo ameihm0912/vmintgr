@@ -28,19 +28,20 @@ def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls):
         if 'vulns' in i:
             for x in mozdef_vuln_urls:
                 debug.printd('writing to %s' % x)
-                msg = mozdef.MozDefMsg(x)
-                msg.fire_and_forget_mode = False
+                msg = mozdef.MozDefVulnerability(x)
+                msg.set_fire_and_forget(False)
                 for j in events:
                     d = json.loads(j)
-                    msg.send_vulnerability(d)
+                    msg.log = d
+                    msg.send()
         elif 'compliance' in i:
             for x in mozdef_compliance_urls:
                 debug.printd('writing to %s' % x)
-                msg = mozdef.MozDefMsg(x)
-                msg.fire_and_forget_mode = False
+                msg = mozdef.MozDefCompliance(x)
+                msg.set_fire_and_forget(False)
                 for j in events:
                     d = json.loads(j)
-                    msg.send_compliance(d['target'], d['policy'],
-                        d['check'], d['compliance'], d['link'], d['tags'])
+                    msg.log = d
+                    msg.send()
 
         os.remove(p)
