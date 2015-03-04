@@ -27,11 +27,11 @@ def ip_exempt(ip):
     if not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip):
         return False
     if ip in exemptlist_hosts:
-        debug.printd('address is exempt from address match')
+        debug.printd('address %s is exempt from address match' % ip)
         return True
     for i in exemptlist_nets:
         if IPAddress(ip) in IPNetwork(i):
-            debug.printd('address is exempt from network match')
+            debug.printd('address %s is exempt from network match' % ip)
             return True
     return False
 
