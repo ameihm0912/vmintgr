@@ -16,17 +16,22 @@ import libvmintgr.debug as debug
 
 exemptlist_hosts = []
 exemptlist_nets = []
+butinclude = []
 
 def ip_exempt(ip):
     if ip == '':
+        return False
+    if ip in butinclude:
         return False
     # Only look at IP addresses here
     if not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip):
         return False
     if ip in exemptlist_hosts:
+        debug.printd('address is exempt from address match')
         return True
     for i in exemptlist_nets:
         if IPAddress(ip) in IPNetwork(i):
+            debug.printd('address is exempt from network match')
             return True
     return False
 
@@ -47,3 +52,9 @@ def load_exemption_list(path):
             exemptlist_nets.append(s)
         else:
             exemptlist_hosts.append(s)
+
+        for k, v in cp.items(s):
+            if k == 'include':
+                if v != '':
+                    for i in v.split():
+                        butinclude.append(i)
