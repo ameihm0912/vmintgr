@@ -22,6 +22,7 @@ def ip_exempt(ip):
     if ip == '':
         return False
     if ip in butinclude:
+        debug.printd('address %s exempted but in include list' % ip)
         return False
     # Only look at IP addresses here
     if not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip):
