@@ -24,6 +24,7 @@ class VMConfig(object):
         self.srcname = None
         self.mozdef_compliance_urls = None
         self.mozdef_vuln_urls = None
+        self.mozdef_hint_urls = None
         self.mozdef_send_description = False
         self.compliance_url = None
         self.compliance_link = None
@@ -38,6 +39,7 @@ class VMConfig(object):
         self.escdir = None
         self.escalate_vulns = False
         self.escalate_compliance = False
+        self.escalate_hints = False
 
         self.purge_groupid = None
 
@@ -107,6 +109,11 @@ class VMConfig(object):
                 self.escalate_compliance = True
             else:
                 self.escalate_compliance = False
+        elif k == 'escalate_hints':
+            if v == '1':
+                self.escalate_hints = True
+            else:
+                self.escalate_hints = False
         else:
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))
@@ -168,6 +175,8 @@ class VMConfig(object):
             self.mozdef_compliance_urls = v.split()
         elif k == 'mozdef_vuln':
             self.mozdef_vuln_urls = v.split()
+        elif k == 'mozdef_hints':
+            self.mozdef_hint_urls = v.split()
         elif k == 'dbbackup':
             self.dbbackup = v
         elif k == 'logfile':

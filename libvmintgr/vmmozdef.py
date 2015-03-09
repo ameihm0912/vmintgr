@@ -14,7 +14,8 @@ import debug
 
 import mozdef_client as mozdef
 
-def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls):
+def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls,
+    mozdef_hint_urls):
     escfiles = os.listdir(escdir)
 
     escfiles = sorted(escfiles, key=lambda x: x.split('-')[1])
@@ -42,6 +43,16 @@ def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls):
                 for j in events:
                     d = json.loads(j)
                     msg.log = d
+                    msg.send()
+        elif 'hint' in i:
+            for x in mozdef_hint_urls:
+                debug.printd('writing to %s' % x)
+                msg = mozdef.MozDefAssetHint(x)
+                msg.set_fire_and_forget(False)
+                for j in events:
+                    d = json.loads(j)
+                    msg.summary = d['summary']
+                    msg.details = d['details']
                     msg.send()
 
         os.remove(p)

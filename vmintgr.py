@@ -127,11 +127,14 @@ def wf_escalations():
     libvmintgr.asset_extraction(scanner)
     libvmintgr.escalate_vulns(vmconfig.escdir, scanner,
         vmconfig.escalate_vulns, vmconfig.escalate_compliance)
+    libvmintgr.escalate_hints(vmconfig.escdir, scanner,
+        vmconfig.escalate_hints, vmconfig.vulnquery_where)
     
 def wf_mozdef():
     libvmintgr.printd('dequeueing events to mozdef...')
     libvmintgr.mozdef_proc(vmconfig.escdir,
-        vmconfig.mozdef_compliance_urls, vmconfig.mozdef_vuln_urls)
+        vmconfig.mozdef_compliance_urls, vmconfig.mozdef_vuln_urls,
+        vmconfig.mozdef_hint_urls)
 
 def wf_reptest():
     libvmintgr.site_extraction(scanner)

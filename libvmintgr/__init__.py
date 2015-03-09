@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 __all__ = ['libvmintgr', 'config', 'debug', 'nexpose', 'exempt', 'sql',
-           'cve', 'vmjson', 'vmmozdef', 'nexrep', 'nexadhoc', 'operator']
+           'cve', 'vmjson', 'vmmozdef', 'nexrep', 'nexadhoc', 'operator',
+           'hints']
 
 from libvmintgr.config import *
 from libvmintgr.debug import *
@@ -17,3 +18,4 @@ from libvmintgr.cve import *
 from libvmintgr.nexrep import *
 from libvmintgr.nexadhoc import *
 from libvmintgr.operator import *
+from libvmintgr.hints import *
