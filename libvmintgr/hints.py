@@ -26,7 +26,6 @@ def hints_block(scanner, whereclause):
     %s
     ''' % whereclause
 
-    nexadhoc.nexpose_adhoc_cache(True)
     buf = nexadhoc.nexpose_adhoc(scanner, squery, [],
         api_version='1.3.2')
 
