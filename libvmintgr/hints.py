@@ -13,6 +13,7 @@ import calendar
 import debug
 import nexpose
 import nexadhoc
+import vmjson
 
 def hints_block(scanner, whereclause):
     squery = '''
@@ -41,6 +42,8 @@ def hints_block(scanner, whereclause):
 
         newdet = {}
         newdet['nexassetid'] = i[0]
+
+        newdet['source'] = vmjson.get_sourcename()
 
         newdet['ipv4'] = []
         newdet['ipv4'].append(i[1])

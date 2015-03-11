@@ -27,6 +27,9 @@ def set_sourcename(s):
     global srcname
     srcname = s
 
+def get_sourcename():
+    return srcname
+
 def set_compliance_urls(u1, u2):
     global compliance_url
     global compliance_link
