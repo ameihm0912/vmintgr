@@ -55,6 +55,7 @@ def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls,
                     d = json.loads(j)
                     msg.summary = d['summary']
                     msg.details = d['details']
+                    msg.tags = d['tags']
                     msg.send()
 
         os.remove(p)

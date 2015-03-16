@@ -39,6 +39,7 @@ def hints_block(scanner, whereclause):
             continue
         newent = {}
         newent['summary'] = 'vmintgr asset hint'
+        newent['tags'] = ['vmintgr', 'asset']
 
         newdet = {}
         newdet['nexassetid'] = i[0]
