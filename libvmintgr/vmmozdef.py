@@ -42,7 +42,9 @@ def mozdef_proc(escdir, mozdef_compliance_urls, mozdef_vuln_urls,
                 msg.set_fire_and_forget(False)
                 for j in events:
                     d = json.loads(j)
-                    msg.log = d
+                    msg.summary = 'vmintgr compliance item'
+                    msg.details = d
+                    msg.tags = ['vmintgr', 'compliance']
                     msg.send()
         elif 'hint' in i:
             for x in mozdef_hint_urls:
