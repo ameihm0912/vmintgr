@@ -53,7 +53,8 @@ def usage():
         '\t-s\t\tSite sync\n' \
         '\t-t\t\tReport test\n' \
         '\t-V\t\tProcess vulnerabilities from source\n' \
-        '\t-w path\t\tWith -V, just write vulnerabilities to file\n')
+        '\t-w path\t\tWith -V, just write vulnerabilities to file\n' \
+        '\t-x path\t\tExport issue list for hosts present in file\n')
 
 def logfile_write(s):
     logfd.write('[%s] %s\n' % (time.asctime(time.localtime()), s))
@@ -105,6 +106,19 @@ def wf_cvemode(targetcve):
     libvmintgr.vuln_extraction(scanner, vmconfig.vulnquery_where,
         writefile=vulns_writefile, readfile=vulns_readfile,
         targetcve=targetcve)
+
+def wf_hostquery(targethosts):
+    libvmintgr.printd('starting host query workflow...')
+    thostbuf = []
+    fd = open(targethosts, 'r')
+    thostbuf = [x.strip() for x in fd.readlines()]
+    fd.close()
+    libvmintgr.site_extraction(scanner)
+    libvmintgr.asset_extraction(scanner)
+    wherebuf = libvmintgr.build_targethost_where(scanner, thostbuf)
+    libvmintgr.vuln_extraction(scanner, wherebuf,
+        writefile=vulns_writefile, readfile=vulns_readfile,
+        targethosts=True)
 
 def wf_group_list():
     libvmintgr.printd('starting asset group list workflow...')
@@ -255,9 +269,12 @@ def domain():
     cvemode = False
     swquerymode = False
     targetgroup = None
+    hostquerymode = False
+    targethosts = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:g:Ghmq:Rr:SsVtw:')
+        opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:g:Ghmq:Rr:' + \
+            'SsVtw:x:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -322,6 +339,10 @@ def domain():
             vulns_writefile = a
         elif o == '-f':
             confpath = a
+        elif o == '-x':
+            hostquerymode = True
+            targethosts = a
+            selection = True
 
     if not selection:
         sys.stderr.write('no operation selected, see usage (-h)\n')
@@ -381,6 +402,8 @@ def domain():
         wf_swquerymode(targetpkg)
     elif adhocgroupmode:
         wf_adhocgroup(targetgroup)
+    elif hostquerymode:
+        wf_hostquery(targethosts)
 
 def wrapmain():
     try:

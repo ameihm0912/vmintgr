@@ -206,8 +206,32 @@ def reptest(scanner):
         return
 
     ret = nexadhoc.nexpose_adhoc(scanner, squery, sites, api_version='1.3.2')
-    print(ret)
+    print ret
     sys.exit(0)
+
+def build_targethost_where(scanner, targethosts):
+    buf = ''
+    for i in targethosts:
+        if buf != '':
+            buf = buf + ' OR '
+        buf = buf + '(ip_address = \'%s\') OR (host_name = \'%s\')' % \
+            (i, i)
+
+    squery = '''
+    SELECT asset_id FROM dim_asset
+    WHERE %s''' % buf
+
+    ret = nexadhoc.nexpose_adhoc(scanner, squery, [], api_version='1.3.2')
+    reader = csv.reader(StringIO.StringIO(ret))
+    retbuf = 'WHERE '
+    for i in reader:
+        if i[0] == 'asset_id':
+            continue
+        if retbuf != 'WHERE ':
+            retbuf = retbuf + ' OR '
+        retbuf = retbuf + '(asset_id = %s)' % i[0]
+
+    return retbuf
 
 def add_asset_properties(scanner):
     squery = '''
@@ -295,7 +319,7 @@ def vuln_get_age_data(scanner):
     return ret
 
 def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
-    targetcve=None):
+    targetcve=None, targethosts=False):
     squery = '''
     WITH 
     vuln_references AS ( 
@@ -422,11 +446,14 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
             if targetcve != None:
                 vuln.vuln_cvereport(a, targetcve)
                 continue
+            elif targethosts:
+                vuln.vuln_hostreport(a)
+                continue
             vuln.vuln_proc_pipeline(a['vulns'],
                 a['id'], a['address'], a['macaddress'],
                 a['hostname'])
 
-    if targetcve != None:
+    if targetcve != None or targethosts:
         return
 
     vuln.expire_hosts()

@@ -348,6 +348,18 @@ def vuln_cvereport(asset, targetcve):
         sys.stdout.write('%s %s %s %s %s\n' % \
             (hostname, addr, mac, c, v.title))
 
+def vuln_hostreport(asset):
+    addr = asset['address']
+    mac = asset['macaddress']
+    hostname = asset['hostname']
+
+    if hostname == '':
+        hostname = 'unknown'
+
+    for v in asset['vulns']:
+        sys.stdout.write('%s %s %s %s\n' % \
+            (hostname, addr, mac, v.title))
+
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache
     vidcache = []
