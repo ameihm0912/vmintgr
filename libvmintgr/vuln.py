@@ -357,8 +357,12 @@ def vuln_hostreport(asset):
         hostname = 'unknown'
 
     for v in asset['vulns']:
-        sys.stdout.write('%s %s %s %s\n' % \
-            (hostname, addr, mac, v.title))
+        if len(v.cves) > 0:
+            cvebuf = ','.join(v.cves)
+        else:
+            cvebuf = '-'
+        sys.stdout.write('%s %s %s %s %s\n' % \
+            (hostname, addr, mac, cvebuf, v.title))
 
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache
