@@ -5,16 +5,35 @@
 
 import sys
 import getopt
+import re
+
+exlist = []
 
 def usage():
-    sys.stdout.write('usage: hfuzz-add.py [-hi] vulnauto hfuzzout ' \
+    sys.stdout.write('usage: hfuzz-add.py [-hi] [-x path] vulnauto hfuzzout ' \
         'groupmatch\n')
+
+def excheck(buf):
+    for x in exlist:
+        if x.match(buf):
+            return True
+    return False
+
+def load_expath(path):
+    fd = open(path, 'r')
+    while True:
+        buf = fd.readline()
+        if buf == None or buf == '':
+            break
+        buf = buf.strip()
+        exlist.append(re.compile(buf))
+    fd.close()
 
 def domain():
     tag = 'namematch ='
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hi')
+        opts, args = getopt.getopt(sys.argv[1:], 'hix:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -25,6 +44,8 @@ def domain():
             sys.exit(0)
         elif o == '-i':
             tag = 'ipmatch ='
+        elif o == '-x':
+            load_expath(a)
 
     if len(args) != 3:
         usage()
@@ -66,6 +87,8 @@ def domain():
         if len(el) != 4:
             continue
         if el[2] != grp:
+            continue
+        if excheck(el[0]):
             continue
         if firstent:
             buf[idx] = '%s #AUTOADD\n' % tag
