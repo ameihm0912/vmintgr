@@ -414,6 +414,8 @@ def load_vulnauto(dirpath, vmdbconn):
         # Ignore templates
         if '.tmpl' in i:
             continue
+        if '.noauto' in i:
+            continue
         load_vulnauto_list(os.path.join(dirpath, i))
 
 def vulnauto_extract_pri(s):
