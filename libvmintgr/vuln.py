@@ -164,6 +164,8 @@ def cvss_to_label(cvss):
     for i in ComplianceLevels.ORDERING:
         if cvss >= ComplianceLevels.FLOOR[i]:
             return i
+    if cvss >= 0:
+        return 'mediumlow'
     return 'unknown'
 
 def cvss_to_patch_in(cvss):
@@ -357,12 +359,17 @@ def vuln_hostreport(asset):
         hostname = 'unknown'
 
     for v in asset['vulns']:
-        if len(v.cves) > 0:
+        if v.cves != None and len(v.cves) > 0:
             cvebuf = ','.join(v.cves)
         else:
             cvebuf = '-'
-        sys.stdout.write('%s %s %s %s %s\n' % \
-            (hostname, addr, mac, cvebuf, v.title))
+
+        if len(mac) == 0:
+            mac = '-'
+
+        impactlabel = cvss_to_label(v.cvss)
+        sys.stdout.write('%s %s %s %s %.2f %s %s\n' % \
+            (hostname, addr, mac, cvebuf, v.cvss, impactlabel, v.title))
 
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache

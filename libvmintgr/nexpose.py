@@ -225,6 +225,8 @@ def build_targethost_where(scanner, targethosts):
     reader = csv.reader(StringIO.StringIO(ret))
     retbuf = 'WHERE '
     for i in reader:
+        if len(i) == 0:
+            continue
         if i[0] == 'asset_id':
             continue
         if retbuf != 'WHERE ':
