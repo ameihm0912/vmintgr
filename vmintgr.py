@@ -54,7 +54,8 @@ def usage():
         '\t-t\t\tReport test\n' \
         '\t-V\t\tProcess vulnerabilities from source\n' \
         '\t-w path\t\tWith -V, just write vulnerabilities to file\n' \
-        '\t-x path\t\tExport issue list for hosts present in file\n')
+        '\t-x path\t\tExport issue list for hosts present in file\n' \
+        '\t-z conf\t\tProcess spool data\n')
 
 def logfile_write(s):
     logfd.write('[%s] %s\n' % (time.asctime(time.localtime()), s))
@@ -119,6 +120,10 @@ def wf_hostquery(targethosts):
     libvmintgr.vuln_extraction(scanner, wherebuf,
         writefile=vulns_writefile, readfile=vulns_readfile,
         targethosts=True)
+
+def wf_spool(path):
+    libvmintgr.printd('starting spool workflow for %s...' % path)
+    libvmintgr.spool_runner(path, scanner)
 
 def wf_group_list():
     libvmintgr.printd('starting asset group list workflow...')
@@ -270,11 +275,12 @@ def domain():
     swquerymode = False
     targetgroup = None
     hostquerymode = False
+    spoolmode = False
     targethosts = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'Aabc:dDef:g:Ghmq:Rr:' + \
-            'SsVtw:x:')
+            'SsVtw:x:z:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -343,6 +349,10 @@ def domain():
             hostquerymode = True
             targethosts = a
             selection = True
+        elif o == '-z':
+            spoolmode = True
+            spoolconf = a
+            selection = True
 
     if not selection:
         sys.stderr.write('no operation selected, see usage (-h)\n')
@@ -404,6 +414,8 @@ def domain():
         wf_adhocgroup(targetgroup)
     elif hostquerymode:
         wf_hostquery(targethosts)
+    elif spoolmode:
+        wf_spool(spoolconf)
 
 def wrapmain():
     try:
