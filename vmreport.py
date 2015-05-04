@@ -26,6 +26,7 @@ def usage():
             '\t-f path\t\tPath to configuration file\n' \
             '\t-g group\tReport on asset group ID\n' \
             '\t-h\t\tUsage\n' \
+            '\t-i\t\tFilter duplicates on IP\n' \
             '\t-s time\t\tSpecify start of statistics window\n')
 
 def group_tac(gid, window_start, window_end):
@@ -45,7 +46,7 @@ def domain():
     nexrep.set_report_mode(nexrep.OUTMODE_ASCII)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'cCde:hf:g:s:')
+        opts, args = getopt.getopt(sys.argv[1:], 'cCde:hif:g:s:')
     except getopt.GetoptError as e:
         sys.stderr.write(str(e) + '\n')
         usage()
@@ -65,6 +66,8 @@ def domain():
             window_end = window_end.replace(tzinfo=dateutil.tz.tzutc())
         elif o == '-f':
             confpath = a
+        elif o == '-i':
+            nexrep.filter_dupip = True
         elif o == '-g':
             repgid = a
         elif o == '-s':

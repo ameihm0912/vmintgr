@@ -17,6 +17,7 @@ OUTMODE_ASCII = 0
 OUTMODE_CSV = 1
 
 device_filter = None
+filter_dupip = False
 report_outmode = OUTMODE_ASCII
 
 class VMDataSet(object):
@@ -183,6 +184,7 @@ def vulns_at_time(scanner, gid, timestamp):
     reader = csv.reader(StringIO.StringIO(ret))
     vulnret = {}
     cnt = 0
+    duprem = 0
     for i in reader:
         if i == None or len(i) == 0:
             continue
@@ -192,6 +194,11 @@ def vulns_at_time(scanner, gid, timestamp):
         newvuln.assetid = int(i[0])
         newvuln.ipaddr = i[1]
         newvuln.hostname = i[2]
+
+        if filter_dupip and \
+            duplicate_test(vulnret, newvuln.assetid, newvuln.ipaddr):
+            duprem += 1
+            continue
 
         idx = i[3].find('.')
         if idx > 0:
@@ -214,7 +221,20 @@ def vulns_at_time(scanner, gid, timestamp):
 
     debug.printd('vulns_at_time: %s: returning %d issues for %d assets' % \
         (timestamp, cnt, len(vulnret.keys())))
+    if duprem > 0:
+        debug.printd('vulns_at_time: %d duplicate items were removed' % duprem)
     return vulnret
+
+def duplicate_test(d, aid, ipaddr):
+    for k in d:
+        aent = d[k]
+        if len(aent) == 0:
+            continue
+        if k == aid:
+            continue
+        if aent[0].ipaddr == ipaddr:
+            return True
+    return False
 
 def vmd_compliance(vlist):
     # Create a compliance element for each finding in the list. failvuln
