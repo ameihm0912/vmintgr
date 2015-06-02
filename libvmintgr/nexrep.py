@@ -157,11 +157,13 @@ def vulns_at_time(scanner, gid, timestamp):
     fasvf.date AS discovered_date,
     fasvf.vulnerability_id,
     dv.title AS vulnerability,
-    round(dv.cvss_score::numeric, 2) AS cvss_score
+    round(dv.cvss_score::numeric, 2) AS cvss_score,
+    dv.cvss_vector AS cvss_vector
     FROM fact_asset_scan_vulnerability_finding fasvf
     JOIN dim_asset da USING (asset_id)
     JOIN dim_vulnerability dv USING (vulnerability_id)
     JOIN asset_scan_map USING (asset_id, scan_id)
+    WHERE fasvf.asset_id IN (SELECT asset_id FROM applicable_assets)
     ),
     issue_age AS (
     SELECT
@@ -172,7 +174,7 @@ def vulns_at_time(scanner, gid, timestamp):
     GROUP BY asset_id, vulnerability_id
     )
     SELECT asset_id, ip_address, host_name, discovered_date,
-    vulnerability_id, vulnerability, cvss_score,
+    vulnerability_id, vulnerability, cvss_score, cvss_vector,
     iage.earliest,
     EXTRACT(EPOCH FROM (discovered_date - iage.earliest))
     FROM current_state_snapshot
@@ -212,7 +214,8 @@ def vulns_at_time(scanner, gid, timestamp):
         newvuln.vid = i[4]
         newvuln.title = i[5]
         newvuln.cvss = float(i[6])
-        newvuln.age_days = float(i[8]) / 60 / 60 / 24
+        newvuln.cvss_vector = i[7]
+        newvuln.age_days = float(i[9]) / 60 / 60 / 24
 
         if newvuln.assetid not in vulnret:
             vulnret[newvuln.assetid] = []
