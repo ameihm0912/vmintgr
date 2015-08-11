@@ -35,6 +35,7 @@ class VMConfig(object):
         self.exempt_dir = None
 
         self.vulnauto_dir = None
+        self.svcauto_dir = None
         self.operdir = None
         self.escdir = None
         self.escalate_vulns = False
@@ -95,6 +96,8 @@ class VMConfig(object):
     def parse_vulnauto(self, k, v, s):
         if k == 'vulndir':
             self.vulnauto_dir = v
+        elif k == 'servicedir':
+            self.svcauto_dir = v
         elif k == 'escalations':
             self.escdir = v
         elif k == 'operators':

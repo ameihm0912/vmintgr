@@ -16,11 +16,13 @@ except ImportError:
     import pickle as cPickle
 import re
 from netaddr import *
+import pyvmsvcs
 
 import libvmintgr.debug as debug
 import libvmintgr.sql as sql
 import libvmintgr.vmjson as vmjson
 
+svcauto = None
 vulnautolist = []
 uidcache = []
 dbconn = None
@@ -410,6 +412,17 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
 
     # Calculate the compliance score for the asset
     calculate_compliance(uid)
+
+def get_service_from_host(hn):
+    if svcauto == None:
+        return {}
+    return svcauto.find_host(hn).todict()
+
+def load_svcauto(dirpath):
+    global svcauto
+
+    debug.printd('reading service automation data...')
+    svcauto = pyvmsvcs.initdb(dirpath)
 
 def load_vulnauto(dirpath, vmdbconn):
     global dbconn
