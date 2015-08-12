@@ -370,8 +370,8 @@ def vuln_hostreport(asset):
             mac = '-'
 
         impactlabel = cvss_to_label(v.cvss)
-        sys.stdout.write('%s %s %s %s %.2f %s %s\n' % \
-            (hostname, addr, mac, cvebuf, v.cvss, impactlabel, v.title))
+        sys.stdout.write('%s %s %s %s %.2f %s %s proof[%s]\n' % \
+            (hostname, addr, mac, cvebuf, v.cvss, impactlabel, v.title, v.proof))
 
 def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     global uidcache
