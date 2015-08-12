@@ -55,7 +55,7 @@ def wf_to_json(w):
     if w.vulnerability.os != None:
         ret['asset']['os'] = w.vulnerability.os
 
-    ret['asset']['service'] = vuln.get_service_from_host(w.vulnerability.hostname)
+    ret['asset']['services'] = vuln.get_service_from_host(w.vulnerability.hostname)
 
     ret['vuln'] = {}
     if w.status == vuln.WorkflowElement.STATUS_ESCALATED:
@@ -110,7 +110,7 @@ def ce_to_json(w, target, autogroup, operator):
         operator = 'it'
     ret['tags']['operator'] = operator
     ret['tags']['autogroup'] = autogroup
-    ret['tags']['service'] = vuln.get_service_from_host(target)
+    ret['tags']['services'] = vuln.get_service_from_host(target)
 
     if w == None:
         ret['compliance'] = True
