@@ -372,7 +372,6 @@ def domain():
     vmdbconn.create()
     libvmintgr.load_exemptions(vmconfig.exempt_dir)
     libvmintgr.load_vulnauto(vmconfig.vulnauto_dir, vmdbconn)
-    libvmintgr.load_svcauto(vmconfig.svcauto_dir)
     libvmintgr.load_operator(vmconfig.operdir)
 
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
