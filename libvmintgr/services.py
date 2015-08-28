@@ -25,7 +25,7 @@ def serviceapi_vulnlist(vlist):
     oplist = []
     for x in vlist:
         oplist.append(json.loads(x))
-    debug.printd('preparing query for serviceapi service lookup')
+    debug.printd('preparing query for serviceapi service lookup (vulnerabilities)')
     s = pyservicelib.Search()
     havehosts = []
     for x in oplist:
@@ -41,6 +41,35 @@ def serviceapi_vulnlist(vlist):
         if len(x['asset']['hostname']) == 0:
             continue
         sres = s.result_host(x['asset']['hostname'])
+        if sres == None:
+            continue
+        x['service'] = sres
+    return [json.dumps(x) for x in oplist]
+
+def serviceapi_complist(clist):
+    if not serviceapi_enabled:
+        return clist
+    oplist = []
+    for x in clist:
+        oplist.append(json.loads(x))
+    debug.printd('preparing query for serviceapi service lookup (compliance)')
+    s = pyservicelib.Search()
+    havehosts = []
+    for x in oplist:
+        # XXX As this data originates from MIG we should always have a valid
+        # hostname field here, but check anyway.
+        hn = x['target']
+        if len(hn) == 0:
+            continue
+        if hn in havehosts:
+            continue
+        s.add_host(hn)
+        havehosts.append(hn)
+    s.execute()
+    for x in oplist:
+        if len(x['target']) == 0:
+            continue
+        sres = s.result_host(x['target'])
         if sres == None:
             continue
         x['service'] = sres

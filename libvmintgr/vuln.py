@@ -235,6 +235,7 @@ def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
         jc = vmjson.ce_to_json(ce, target, autogroup, operator)
         clist.append(jc)
 
+    clist = services.serviceapi_complist(clist)
     if len(clist) > 0:
         if escalate_compliance:
             write_compliance_escalations(clist, escdir)
