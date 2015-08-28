@@ -20,6 +20,7 @@ from netaddr import *
 import libvmintgr.debug as debug
 import libvmintgr.sql as sql
 import libvmintgr.vmjson as vmjson
+import libvmintgr.services as services
 
 vulnautolist = []
 uidcache = []
@@ -211,6 +212,7 @@ def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
             # Mark this workflow element as handled now
             dbconn.workflow_handled(w.workflow_id, w.status)
 
+    vlist = services.serviceapi_vulnlist(vlist)
     if len(vlist) > 0:
         if escalate_vulns:
             write_vuln_escalations(vlist, escdir)

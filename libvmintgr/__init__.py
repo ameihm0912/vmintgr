@@ -4,7 +4,7 @@
 
 __all__ = ['libvmintgr', 'config', 'debug', 'nexpose', 'exempt', 'sql',
            'cve', 'vmjson', 'vmmozdef', 'nexrep', 'nexadhoc', 'operator',
-           'hints', 'spool', 'misc']
+           'hints', 'spool', 'misc', 'services']
 
 from libvmintgr.config import *
 from libvmintgr.debug import *
@@ -21,3 +21,4 @@ from libvmintgr.operator import *
 from libvmintgr.hints import *
 from libvmintgr.spool import *
 from libvmintgr.misc import *
+from libvmintgr.services import *

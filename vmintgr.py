@@ -374,6 +374,10 @@ def domain():
     libvmintgr.load_vulnauto(vmconfig.vulnauto_dir, vmdbconn)
     libvmintgr.load_operator(vmconfig.operdir)
 
+    if vmconfig.useserviceapi:
+        libvmintgr.serviceapi_init(vmconfig.serviceapihost, \
+            vmconfig.serviceapicert)
+
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)
     scanner = libvmintgr.nexpose_connector(vmconfig.vms_server, \

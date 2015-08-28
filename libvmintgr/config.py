@@ -41,6 +41,10 @@ class VMConfig(object):
         self.escalate_compliance = False
         self.escalate_hints = False
 
+        self.useserviceapi = False
+        self.serviceapihost = None
+        self.serviceapicert = None
+
         self.purge_groupid = None
 
         self.devsync_map = {}
@@ -71,6 +75,8 @@ class VMConfig(object):
                 mdesc = 'autopurge'
             elif s == 'mozdef':
                 mdesc = 'mozdef'
+            elif s == 'serviceapi':
+                mdesc = 'serviceapi'
             elif s == 'debug':
                 mdesc = 'debug'
             else:
@@ -91,6 +97,17 @@ class VMConfig(object):
             sys.stderr.write('option %s not available under %s\n' % \
                 (k, s))
             sys.exit(1)
+
+    def parse_serviceapi(self, k, v, s):
+        if k == 'useserviceapi':
+            if v == '1':
+                self.useserviceapi = True
+            else:
+                self.useserviceapi = False
+        elif k == 'serviceapihost':
+            self.serviceapihost = v
+        elif k == 'serviceapicert':
+            self.serviceapicert = v
 
     def parse_vulnauto(self, k, v, s):
         if k == 'vulndir':
