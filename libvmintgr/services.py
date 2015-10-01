@@ -34,7 +34,7 @@ def serviceapi_vulnlist(vlist):
             continue
         if hn in havehosts:
             continue
-        s.add_host(hn)
+        s.add_host(hn, confidence=90)
         havehosts.append(hn)
     s.execute()
     for x in oplist:
@@ -63,7 +63,7 @@ def serviceapi_complist(clist):
             continue
         if hn in havehosts:
             continue
-        s.add_host(hn)
+        s.add_host(hn, confidence=90)
         havehosts.append(hn)
     s.execute()
     for x in oplist:
