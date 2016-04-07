@@ -147,6 +147,8 @@ def nexpose_parse_custom_authfail(scanner, buf):
 def nexpose_fetch_report(repid, reploc):
     global cookiejar
 
+    if len(reploc) > 1 and reploc.startswith('/'):
+        reploc = reploc[1:]
     url = 'https://%s:%d/%s' % (nx_console_server, nx_console_port, reploc)
 
     opener = build_opener(HTTPCookieProcessor(cookiejar))
