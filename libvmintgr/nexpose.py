@@ -51,7 +51,7 @@ def nexpose_consolelogin(server, port, user, pw):
     global nx_console_port
     global cookiejar
 
-    loginurl = 'https://%s:%d/login.html' % (server, port)
+    loginurl = 'https://%s:%d/data/user/login' % (server, port)
     vals = { 'nexposeccusername': user,
              'nexposeccpassword': pw,
              'loginRedir': '/home.jsp',
