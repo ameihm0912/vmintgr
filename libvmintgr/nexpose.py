@@ -40,6 +40,13 @@ cookiejar = None
 nx_console_server = None
 nx_console_port = None
 
+CREDSTATUS_NOCREDSUP = 1
+CREDSTATUS_LOGINFAIL = 2
+CREDSTATUS_LOGINSUCC = 3
+CREDSTATUS_LOGINPRIV = 4
+CREDSTATUS_LOGINROOT = 5
+CREDSTATUS_LOGINADMN = 6
+
 class nexpose_connector(object):
     def __init__(self, server, port, user, pw):
         self.conn = pnexpose.Connection(server, port, user, pw)
@@ -241,11 +248,12 @@ def add_asset_properties(scanner):
     squery = '''
     SELECT asset_id, ds.name AS site_name, da.ip_address, da.host_name,
     da.mac_address, dos.description AS operating_system, dht.description,
-    dos.asset_type, dos.cpe FROM dim_asset da 
+    dos.asset_type, dos.cpe, fa.aggregated_credential_status_id FROM dim_asset da
     JOIN dim_operating_system dos USING (operating_system_id) 
     JOIN dim_host_type dht USING (host_type_id) 
     JOIN dim_site_asset dsa USING (asset_id) 
     JOIN dim_site ds USING (site_id)
+    JOIN fact_asset fa USING (asset_id)
     '''
 
     debug.printd('requesting additional asset properties')
@@ -271,10 +279,15 @@ def add_asset_properties(scanner):
             if a['id'] not in atable.keys():
                 a['hostname'] = ''
                 a['macaddress'] = ''
+                a['credsok'] = False
                 continue
             a['hostname'] = atable[a['id']][2]
             a['macaddress'] = atable[a['id']][3]
             a['os'] = atable[a['id']][4]
+            a['credsok'] = False
+            cstatus = atable[a['id']][8]
+            if int(cstatus) >= CREDSTATUS_LOGINSUCC:
+                a['credsok'] = True
 
 def vuln_age_days(v, agedata):
     # It's possible here that if the -r flag was used as the source for

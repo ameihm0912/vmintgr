@@ -212,6 +212,9 @@ def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
             # Mark this workflow element as handled now
             dbconn.workflow_handled(w.workflow_id, w.status)
 
+    # Send coverage indicators
+    services.send_indicators(scanner)
+
     vlist = services.serviceapi_vulnlist(vlist)
     if len(vlist) > 0:
         if escalate_vulns:

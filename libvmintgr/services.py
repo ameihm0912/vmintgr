@@ -19,6 +19,19 @@ def serviceapi_init(apihost, apicert):
     pyservicelib.config.apihost = apihost
     serviceapi_enabled = True
 
+def send_indicators(scanner):
+    if not serviceapi_enabled:
+        return
+    debug.printd('submitting indicators for all known assets...')
+    ind = pyservicelib.Indicators()
+    for s in scanner.sitelist.keys():
+        for a in scanner.sitelist[s]['assets']:
+            # If we dont have a hostname, don't bother sending anything
+            if a['hostname'] == '':
+                continue
+            ind.add_host(a['hostname'], 'vuln', 'nexpose', a['credsok'])
+    ind.execute()
+
 def serviceapi_vulnlist(vlist):
     if not serviceapi_enabled:
         return vlist
