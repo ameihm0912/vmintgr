@@ -50,7 +50,6 @@ def wf_to_json(w):
     ret['asset']['hostname'] = w.vulnerability.hostname
     ret['asset']['macaddress'] = w.vulnerability.macaddr
     ret['asset']['autogroup'] = w.vulnerability.autogroup
-    ret['asset']['operator'] = w.vulnerability.operator
 
     if w.vulnerability.os != None:
         ret['asset']['os'] = w.vulnerability.os
@@ -83,7 +82,7 @@ def wf_to_json(w):
 
     return json.dumps(ret)
 
-def ce_to_json(w, target, autogroup, operator):
+def ce_to_json(w, target, autogroup):
     ret = {}
 
     ret['target'] = target
@@ -104,9 +103,6 @@ def ce_to_json(w, target, autogroup, operator):
     ret['check']['test']['value'] = 'nexpose'
     
     ret['tags'] = {}
-    if operator == 'systems':
-        operator = 'it'
-    ret['tags']['operator'] = operator
     ret['tags']['autogroup'] = autogroup
 
     if w == None:

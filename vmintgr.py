@@ -377,7 +377,6 @@ def domain():
 
     libvmintgr.load_exemptions(vmconfig.exempt_dir)
     libvmintgr.load_vulnauto(vmdbconn)
-    libvmintgr.load_operator(vmconfig.operdir)
 
     libvmintgr.nexpose_consolelogin(vmconfig.vms_server, \
         vmconfig.vms_port, vmconfig.vms_username, vmconfig.vms_password)
