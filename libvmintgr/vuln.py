@@ -439,7 +439,7 @@ def load_vulnauto(vmdbconn):
     for i in ents:
         vamap[i] = VulnAutoEntry(i)
         vamap[i].mincvss = 6.0
-        vamap[i].name = i
+        vamap[i].title = i
         vamap[i].description = i
     for i in vad['vulnauto']:
         vamap[i['v2bkey']].add_namematch(str(i['match']), 1)
