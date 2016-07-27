@@ -17,11 +17,14 @@ except ImportError:
 import re
 from netaddr import *
 
+import pyservicelib
+
 import libvmintgr.debug as debug
 import libvmintgr.sql as sql
 import libvmintgr.vmjson as vmjson
 import libvmintgr.services as services
 
+defaultvulnauto = None
 vulnautolist = []
 uidcache = []
 dbconn = None
@@ -314,6 +317,7 @@ def calculate_compliance(uid):
 def vuln_auto_finder(address, mac, hostname):
     candlist = None
     last = -1
+    cand = None
     for va in vulnautolist:
         ret = va.name_test(hostname)
         if ret != -1:
@@ -330,7 +334,8 @@ def vuln_auto_finder(address, mac, hostname):
     if cand != None:
         debug.printd('using VulnAutoEntry %s (score: %d)' % (cand.name, last))
     else:
-        debug.printd('unable to match automation handler')
+        debug.printd('using default vulnauto entry')
+        cand = defaultvulnauto
     return cand
 
 def vuln_cvereport(asset, targetcve):
@@ -417,64 +422,28 @@ def vuln_proc_pipeline(vlist, aid, address, mac, hostname):
     # Calculate the compliance score for the asset
     calculate_compliance(uid)
 
-def load_vulnauto(dirpath, vmdbconn):
+def load_vulnauto(vmdbconn):
     global dbconn
-
-    debug.printd('reading vulnerability automation data...')
+    global defaultvulnauto
     dbconn = vmdbconn
-    dirlist = os.listdir(dirpath)
-    for i in dirlist:
-        # Ignore templates
-        if '.tmpl' in i:
-            continue
-        if '.noauto' in i:
-            continue
-        load_vulnauto_list(os.path.join(dirpath, i))
 
-def vulnauto_extract_pri(s):
-    if len(s) < 4:
-        return (s, 9)
-    if s[0] != '{':
-        return (s, 9)
-    pri = int(s[1])
-    if pri < 0 or pri > 9:
-        raise Exception('bad priority for %s' % s)
-    ret = s[3:]
-    return (ret, pri)
+    debug.printd('adding default vulnauto entry')
+    defaultvulnauto = VulnAutoEntry('default')
+    defaultvulnauto.name = 'default'
+    defaultvulnauto.mincvss = 6.0
+    defaultvulnauto.description = 'default'
 
-def load_vulnauto_list(path):
-    debug.printd('reading automation data from %s' % path)
-    cp = ConfigParser.SafeConfigParser()
-    cp.read(path)
+    debug.printd('requesting automation data from service api')
+    vad = pyservicelib.get_vulnauto()
 
-    for s in cp.sections():
-        n = VulnAutoEntry(s)
-        for k, v in cp.items(s):
-            if k == 'mincvss':
-                n.mincvss = float(v)
-                pass
-            elif k == 'ipmatch':
-                if v != '':
-                    for i in v.split():
-                        if i == '#AUTOADD':
-                            continue
-                        if i != '':
-                            newval = vulnauto_extract_pri(i)
-                            n.add_match(newval[0], newval[1])
-            elif k == 'namematch':
-                if v != '':
-                    for i in v.split():
-                        if i == '#AUTOADD':
-                            continue
-                        newval = vulnauto_extract_pri(i)
-                        n.add_namematch(newval[0], newval[1])
-            elif k == 'name':
-                n.title = v
-            elif k == 'description':
-                n.description = v
-            else:
-                sys.stderr.write('vulnauto option %s not available under ' \
-                    '%s\n' % (k, s))
-                sys.exit(1)
-        vulnautolist.append(n)
-            
+    ents = set([str(x['v2bkey']) for x in vad['vulnauto']]) 
+    vamap = {}
+    for i in ents:
+        vamap[i] = VulnAutoEntry(i)
+        vamap[i].mincvss = 6.0
+        vamap[i].name = i
+        vamap[i].description = i
+    for i in vad['vulnauto']:
+        vamap[i['v2bkey']].add_namematch(str(i['match']), 1)
+    for i in vamap:
+        vulnautolist.append(vamap[i])

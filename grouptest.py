@@ -30,7 +30,12 @@ if len(args) != 1:
     sys.exit(1)
 
 vmconfig = libvmintgr.VMConfig(confpath)
-libvmintgr.load_vulnauto(vmconfig.vulnauto_dir, None)
+
+if vmconfig.useserviceapi:
+    libvmintgr.serviceapi_init(vmconfig.serviceapihost, \
+        vmconfig.serviceapicert)
+
+libvmintgr.load_vulnauto(None)
 
 matchip = '0.0.0.0'
 matchhost = ''
