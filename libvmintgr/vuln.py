@@ -434,14 +434,10 @@ def load_vulnauto(vmdbconn):
     debug.printd('requesting automation data from service api')
     vad = pyservicelib.get_vulnauto()
 
-    ents = set([str(x['v2bkey']) for x in vad['vulnauto']]) 
-    vamap = {}
-    for i in ents:
-        vamap[i] = VulnAutoEntry(i)
-        vamap[i].mincvss = 6.0
-        vamap[i].title = i
-        vamap[i].description = i
     for i in vad['vulnauto']:
-        vamap[i['v2bkey']].add_namematch(str(i['match']), 1)
-    for i in vamap:
-        vulnautolist.append(vamap[i])
+        ne = VulnAutoEntry(str(i['v2bkey']))
+        ne.mincvss = 6.0
+        ne.title = str(i['v2bkey'])
+        ne.description = ne.title
+        ne.add_namematch(str(i['match']), 1)
+        vulnautolist.append(ne)
