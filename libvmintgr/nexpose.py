@@ -691,9 +691,14 @@ def asset_grouping(scanner):
     # Each automation entry that was loaded will result in an asset group
     groupdata = {}
     for x in vuln.vulnautolist:
-        groupdata[x.name] = {}
-        groupdata[x.name]['autoentry'] = x
-        groupdata[x.name]['assetids'] = []
+        if x.name not in groupdata:
+            groupdata[x.name] = {}
+            groupdata[x.name]['autoentry'] = x
+            groupdata[x.name]['assetids'] = []
+    # Also add the default
+    groupdata['default'] = {}
+    groupdata['default']['autoentry'] = vuln.defaultvulnauto
+    groupdata['default']['assetids'] = []
     for s in scanner.sitelist:
         for a in scanner.sitelist[s]['assets']:
             vent = vuln.vuln_auto_finder(a['address'], a['macaddress'],
@@ -701,7 +706,7 @@ def asset_grouping(scanner):
             if vent == None:
                 continue
             for i in groupdata:
-                if groupdata[i]['autoentry'] == vent:
+                if groupdata[i]['autoentry'].name == vent.name:
                     groupdata[i]['assetids'].append(a['id'])
 
     for x in groupdata:

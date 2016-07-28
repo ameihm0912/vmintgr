@@ -427,7 +427,7 @@ def load_vulnauto(vmdbconn):
 
     debug.printd('adding default vulnauto entry')
     defaultvulnauto = VulnAutoEntry('default')
-    defaultvulnauto.name = 'default'
+    defaultvulnauto.title = 'default'
     defaultvulnauto.mincvss = 6.0
     defaultvulnauto.description = 'default'
 
