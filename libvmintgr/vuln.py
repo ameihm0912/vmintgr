@@ -144,6 +144,7 @@ class vulnerability(object):
         self.cvss = None
         self.cvss_vector = None
         self.impact_label = None
+        self.likelihood_indicator = None
         self.rhsa = None
         self.vid = None
         self.vid_classified = None
@@ -206,6 +207,12 @@ def escalate_vulns(escdir, scanner, escalate_vulns, escalate_compliance):
                 w.status = WorkflowElement.STATUS_CLOSED
 
             w.vulnerability.os = sitelist_get_os(w.assetid_site, scanner)
+
+            # Assign a risk likelihood indicator value to the event. We
+            # default to MEDIUM. HIGH and MAXIMUM are reserved for issues
+            # that are manually flagged as such, which this tool does not
+            # currently support handling.
+            w.vulnerability.likelihood_indicator = 'medium'
 
             # Create JSON event from the element
             jv = vmjson.wf_to_json(w)
