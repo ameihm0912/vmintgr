@@ -96,6 +96,7 @@ def ce_to_json(w, target, autogroup):
     ret['check'] = {}
     ret['check']['name'] = 'vulnerability scanner check'
     ret['check']['description'] = 'validate system patch level'
+    ret['check']['likelihood_indicator'] = 'medium'
     ret['check']['location'] = 'endpoint'
     ret['check']['ref'] = 'sysmediumupdates1'
     ret['check']['test'] = {}
