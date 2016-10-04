@@ -263,7 +263,7 @@ def add_asset_properties(scanner):
         return
 
     vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
-        api_version='1.3.2')
+        api_version='2.0.2')
 
     reader = csv.reader(StringIO.StringIO(vulndata))
     atable = {}
