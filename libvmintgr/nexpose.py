@@ -429,7 +429,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     if targetcve != None or targethosts:
         return
 
-    vuln.expire_hosts()
+    vuln.resolve_expired_hosts()
 
 def vuln_instance_link(v, scanner):
     ret = 0
