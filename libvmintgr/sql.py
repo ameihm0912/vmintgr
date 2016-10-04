@@ -390,6 +390,7 @@ class VMIntDB(object):
         for i in rows:
             if i[0] in vidlist:
                 continue
+            debug.printd('marking vulnerability %d as resolved' % i[1])
             # We previously knew about the vulnerability on the device
             # and it's not there anymore, mark it as resolved
             c.execute('''UPDATE workflow SET status = ?

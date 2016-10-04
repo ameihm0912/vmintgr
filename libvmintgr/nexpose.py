@@ -409,8 +409,11 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     vuln.vuln_reset_uid_cache()
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
+            # It's possible the asset has no known issues, but we still want to
+            # pass this infomration into vuln_proc_pipeline so we can resolve any
+            # known issues for the asset.
             if len(a['vulns']) == 0:
-                continue
+                debug.printd('scanner reports asset %d with no known issues' % a['id'])
             # If in target CVE report mode, just report on the CVE but
             # don't actually process the vulnerability
             if targetcve != None:
