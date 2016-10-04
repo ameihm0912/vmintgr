@@ -91,14 +91,14 @@ class VMIntDB(object):
                     ?, ?)''',(vid, rhsa))
         self._conn.commit()
             
-    def expire_hosts(self, foundlist):
+    def resolve_expired_hosts(self, foundlist):
         c = self._conn.cursor()
 
         c.execute('''SELECT id, uid FROM assets''')
         rows = c.fetchall()
         for i in rows:
             if i[1] not in foundlist:
-                self.remove_asset(i[0])
+                self.resolve_workflow_for_asset(i[0])
     
     def asset_list(self):
         ret = []
@@ -281,15 +281,13 @@ class VMIntDB(object):
             ret.append(wfe)
         return ret
 
-    def remove_asset(self, assetid):
+    def resolve_workflow_for_asset(self, assetid):
         c = self._conn.cursor()
 
-        debug.printd('removing database asset id %d' % assetid)
-        c.execute('''DELETE FROM workflow WHERE vid IN
-            (SELECT id FROM assetvulns WHERE aid = ?)''', (assetid,))
-        c.execute('''DELETE FROM assetvulns WHERE aid = ?''', (assetid,))
-        c.execute('''DELETE FROM compliance WHERE aid = ?''', (assetid,))
-        c.execute('''DELETE FROM assets WHERE id = ?''', (assetid,))
+        debug.printd('resolving all known issues for expired asset id %d' % assetid)
+        c.execute('''UPDATE workflow SET status = ?
+            WHERE vid IN (SELECT id FROM assetvulns WHERE aid = ?)''',
+            (vuln.WorkflowElement.STATUS_RESOLVED, assetid))
         self._conn.commit()
 
     def add_vuln_master(self, v):
@@ -390,6 +388,7 @@ class VMIntDB(object):
         for i in rows:
             if i[0] in vidlist:
                 continue
+            debug.printd('marking vulnerability %d as resolved' % i[1])
             # We previously knew about the vulnerability on the device
             # and it's not there anymore, mark it as resolved
             c.execute('''UPDATE workflow SET status = ?

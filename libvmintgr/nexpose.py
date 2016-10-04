@@ -263,7 +263,7 @@ def add_asset_properties(scanner):
         return
 
     vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
-        api_version='1.3.2')
+        api_version='2.0.2')
 
     reader = csv.reader(StringIO.StringIO(vulndata))
     atable = {}
@@ -289,52 +289,6 @@ def add_asset_properties(scanner):
             if int(cstatus) >= CREDSTATUS_LOGINSUCC:
                 a['credsok'] = True
 
-def vuln_age_days(v, agedata):
-    # It's possible here that if the -r flag was used as the source for
-    # vulnerabilities, and things were added to the file, we might not have
-    # age data for the issue since that still comes from the server.
-    #
-    # In this case, return an age of 10 days.
-    try:
-        ret = agedata[v.assetid][int(v.vid)]
-    except KeyError:
-        return 10.0
-    return ret
-
-def vuln_get_age_data(scanner):
-    squery = '''
-    SELECT asset_id, vulnerability_id, age_in_days FROM
-    fact_asset_vulnerability_age
-    '''
-
-    ret = {}
-
-    debug.printd('requesting vulnerability age information')
-
-    sites = scanner.sitelist.keys()
-    if len(sites) == 0:
-        return
-
-    vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
-        api_version='1.3.2')
-    reader = csv.reader(StringIO.StringIO(vulndata))
-    for i in reader:
-        if len(i) == 0:
-            continue
-        if i[0] == 'asset_id':
-            continue
-        assetid = int(i[0])
-        vid = int(i[1])
-        age = float(i[2])
-        if assetid not in ret:
-            ret[assetid] = {}
-        if vid not in ret[assetid]:
-            ret[assetid][vid] = age
-        else:
-            if age > ret[assetid][vid]:
-                ret[assetid][vid] = age
-    return ret
-
 def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     targetcve=None, targethosts=False):
     squery = '''
@@ -355,7 +309,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     round(dv.cvss_score::numeric, 2) AS cvss_score, vr.references, dv.exploits,
     dv.malware_kits, dv.vulnerability_id,
     dv.description, dv.cvss_vector,
-    proofAsText(favi.proof)
+    proofAsText(favi.proof), age_in_days
     FROM fact_asset_vulnerability_instance favi 
     JOIN dim_asset da USING (asset_id) 
     JOIN dim_vulnerability dv USING (vulnerability_id) 
@@ -365,6 +319,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     JOIN dim_protocol dp USING (protocol_id) 
     JOIN dim_service dsvc USING (service_id) 
     JOIN vuln_references vr USING (vulnerability_id) 
+    JOIN fact_asset_vulnerability_age USING (asset_id, vulnerability_id)
     %s
     ORDER BY ds.name, da.ip_address
     ''' % vulnquery_where
@@ -375,8 +330,6 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     if len(sites) == 0:
         return
 
-    agedata = vuln_get_age_data(scanner)
-
     if readfile != None:
         debug.printd('reading vulnerability data from %s' % readfile)
         fd = open(readfile, 'r')
@@ -384,7 +337,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
         fd.close()
     else:
         vulndata = nexadhoc.nexpose_adhoc(scanner, squery, sites,
-            api_version='1.3.2')
+            api_version='2.0.2')
 
     if writefile != None:
         fd = open(writefile, 'w')
@@ -418,12 +371,12 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
         v.description = i[16]
         v.cvss_vector = i[17]
         v.proof = i[18]
+        v.age_days = i[19]
         idx = i[7].find('.')
         if idx > 0:
             dstr = i[7][:idx]
         else:
             dstr = i[7]
-        v.age_days = vuln_age_days(v, agedata)
         dt = datetime.datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
         dt = dt.replace(tzinfo=pytz.UTC)
         v.discovered_date = dt
@@ -456,8 +409,11 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     vuln.vuln_reset_uid_cache()
     for s in scanner.sitelist.keys():
         for a in scanner.sitelist[s]['assets']:
+            # It's possible the asset has no known issues, but we still want to
+            # pass this infomration into vuln_proc_pipeline so we can resolve any
+            # known issues for the asset.
             if len(a['vulns']) == 0:
-                continue
+                debug.printd('scanner reports asset %d with no known issues' % a['id'])
             # If in target CVE report mode, just report on the CVE but
             # don't actually process the vulnerability
             if targetcve != None:
@@ -473,7 +429,7 @@ def vuln_extraction(scanner, vulnquery_where, writefile=None, readfile=None,
     if targetcve != None or targethosts:
         return
 
-    vuln.expire_hosts()
+    vuln.resolve_expired_hosts()
 
 def vuln_instance_link(v, scanner):
     ret = 0

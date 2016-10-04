@@ -182,8 +182,8 @@ def vuln_reset_uid_cache():
     global uidcache
     uidcache = []
 
-def expire_hosts():
-    dbconn.expire_hosts(uidcache)
+def resolve_expired_hosts():
+    dbconn.resolve_expired_hosts(uidcache)
 
 def sitelist_get_os(aid, scanner):
     for s in scanner.sitelist.keys():
