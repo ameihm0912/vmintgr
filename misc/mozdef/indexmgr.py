@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sys
-import pyes
 import getopt
+from elasticsearch_dsl.connections import connections
 
 es = None
 index = 'vulnerabilities'
@@ -45,12 +45,11 @@ def domain():
     if eshost == None:
         sys.stderr.write('error: eshost must be specified with -e\n')
         sys.exit(1)
-    es = pyes.ES(('http', eshost, '9200'))
+    connections.create_connection(hosts=[eshost])
 
     if opmode == MODE_LIST:
-        idx = es.indices.get_indices()
-        for i in idx:
-            sys.stdout.write('%s %d\n' % (i, idx[i]['num_docs']))
+        for x in connections.get_connection().indices.get_aliases().keys():
+            sys.stdout.write('{}\n'.format(x))
     elif opmode == MODE_CREATE:
         stgs = {
                 'mappings': {
@@ -72,9 +71,9 @@ def domain():
                             }
                     }
                 }
-        es.indices.create_index(index, stgs)
+        connections.get_connection().indices.create(index, body=stgs)
     elif opmode == MODE_DELETE:
-        es.indices.delete_index(index)
+        connections.get_connection().indices.delete(index)
 
 if __name__ == '__main__':
     domain()
