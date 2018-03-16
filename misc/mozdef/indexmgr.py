@@ -59,12 +59,10 @@ def domain():
                                 'vuln': {
                                     'properties': {
                                         'title': {
-                                            'type': 'string',
-                                            'index': 'not_analyzed'
+                                            'type': 'keyword',
                                             },
                                         'cves': {
-                                            'type': 'string',
-                                            'index': 'not_analyzed'
+                                            'type': 'keyword',
                                             }
                                         }
                                     }
